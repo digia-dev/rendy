@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+  <!-- macOS busy spinner (static surrogate) -->
+  <g stroke-width="2.4" fill="none" stroke-linecap="round">
+    <circle cx="14" cy="14" r="9" stroke="#ccc"/>
+  </g>
+  <g stroke-width="2.4" fill="none" stroke-linecap="round">
+    <path d="M14 5 A9 9 0 0 1 22 11" stroke="#111"/>
+    <path d="M14 5 A9 9 0 0 1 22 11" stroke="#fff" transform="scale(0.94)" transform-origin="14 14"/>
+  </g>
+</svg>

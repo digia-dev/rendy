@@ -11,18 +11,18 @@ export function PillarStack({ locale }: { locale: Locale }) {
       {pillars.map((p, i) => (
         <article
           key={p.tab.en}
-          className="stack-card relative mx-4 mb-6 md:sticky md:top-24 md:mx-auto md:mb-0 md:max-w-[1240px] md:min-h-[804px]"
+          className="folder-card relative mx-4 mb-6 md:sticky md:top-24 md:mx-auto md:mb-0 md:max-w-[1240px] md:min-h-[804px]"
           style={{ zIndex: 10 + i }}
         >
-          {/* header strip + tab menonjol (S-curve) */}
-          <div className="stack-header h-[66px] w-full">
-            <div className="stack-tab">
-              <span className="stack-tab-label">{p.tab[locale]}</span>
+          {/* tab folder besar (kiri), ala folder macOS */}
+          <div className="folder-tab">
+            <div className="folder-tab-shape">
+              <span className="folder-tab-label">{p.tab[locale]}</span>
             </div>
           </div>
 
-          {/* content panel off-white */}
-          <div className="bg-[#f6f7f9] px-6 pb-16 pt-10 md:min-h-[738px] md:px-10 md:pt-14">
+          {/* body besar off-white */}
+          <div className="bg-[#f6f7f9] px-6 pb-16 pt-8 md:min-h-[730px] md:px-10 md:pt-12">
             <div className="mx-auto grid max-w-[1060px] items-start gap-8 md:grid-cols-2 md:gap-16">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">

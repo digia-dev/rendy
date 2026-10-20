@@ -69,11 +69,26 @@ export function FloatingMusicMobile() {
       const dy = ev.clientY - drag.current.sy;
       if (!drag.current.moved && Math.hypot(dx, dy) < 5) return;
       drag.current.moved = true;
-      // clamp dalam viewport
       const w = btnRef.current?.offsetWidth ?? 180;
       const h = btnRef.current?.offsetHeight ?? 56;
       const nx = Math.min(window.innerWidth - w - 8, Math.max(8, drag.current.ox + dx));
-      const ny = Math.min(window.innerHeight - h - 8, Math.max(8, drag.current.oy + dy));
+      let ny = Math.min(window.innerHeight - h - 8, Math.max(8, drag.current.oy + dy));
+
+      // no-fly zone: area deck navigasi mobile (bawah-tengah) — musik tidak boleh
+      // menutupi deck. Jika kandidat posisi menabrak zona itu, dorong ke atas zona.
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const deckW = Math.min(340, vw - 20); // perkiraan lebar deck
+      const deckTop = vh - 118; // perkiraan posisi atas deck (bottom-4 + tinggi)
+      const zoneLeft = vw / 2 - deckW / 2;
+      const zoneRight = vw / 2 + deckW / 2;
+      const overlapX = nx < zoneRight && nx + w > zoneLeft;
+      const overlapY = ny < vh - 8 && ny + h > deckTop;
+      if (overlapX && overlapY) {
+        // taruh tepat di atas deck
+        ny = deckTop - h - 8;
+      }
+
       setPos({ x: nx, y: ny });
     };
     const up = () => {
@@ -99,7 +114,7 @@ export function FloatingMusicMobile() {
 
   const style: React.CSSProperties = pos
     ? { left: pos.x, top: pos.y }
-    : { right: 12, bottom: 24, left: undefined, top: undefined };
+    : { right: 12, top: 64, left: undefined, bottom: undefined };
 
   return (
     <>

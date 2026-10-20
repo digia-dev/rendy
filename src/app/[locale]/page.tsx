@@ -5,6 +5,7 @@ import { AchievementsGrid } from "@/components/sites/rendy/AchievementsGrid";
 import { AboutTxt } from "@/components/sites/rendy/AboutTxt";
 import { CertificatesMarquee } from "@/components/sites/rendy/CertificatesMarquee";
 import { ContactFooter } from "@/components/sites/rendy/ContactFooter";
+import { FaqSection } from "@/components/sites/rendy/FaqSection";
 import { HeroDesktop } from "@/components/sites/rendy/HeroDesktop";
 import { SectionDock } from "@/components/sites/rendy/SectionDock";
 import { PillarStack } from "@/components/sites/rendy/PillarStack";
@@ -39,6 +40,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <PortfolioList locale={l} />
       <PlaygroundDeck locale={l} />
       <AboutTxt locale={l} />
+      {/* C1 — FAQ section, diletakkan di bawah #about */}
+      <FaqSection locale={l} />
       {/* Dock navigasi mobile — sticky di bawah, naik saat footer */}
       <SectionDock mode="bottom" locale={l} dayOfMonth={dayOfMonth} weekdayShort={weekdayShort} />
       {/* Floating music (mode mobile) */}

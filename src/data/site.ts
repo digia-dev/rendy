@@ -43,6 +43,7 @@ export const hero = {
   line2Prefix: { id: "Marketing & Product Manager", en: "Marketing & Product Manager" } satisfies L10n,
   line2Suffix: { id: "di", en: "at" } satisfies L10n,
   line2LinkText: { id: "Rapid Network", en: "Rapid Network" } satisfies L10n,
+  heroStatus: { id: "Terbuka untuk peluang", en: "Open to opportunities" } satisfies L10n,
   subtitle: {
     id: "Menangani 200+ klien, 8+ proyek pemerintah, dan operasional 7+ cabang di ISP & system integrator One Stop Digital Solution.",
     en: "Handling 200+ clients, 8+ government projects, and operations across 7+ branches at an ISP & system integrator delivering one-stop digital solutions.",
@@ -60,7 +61,7 @@ export interface Folder {
 export const folders: Folder[] = [
   { slug: "rapid-network", href: "/work/rapid-network", label: { id: "Rapid Network", en: "Rapid Network" } },
   { slug: "home-credit", href: "/work/home-credit", label: { id: "Home Credit", en: "Home Credit" } },
-  { slug: "suryapran", href: "/work/suryapran", label: { id: "Suryapran", en: "Suryapran" } },
+  { slug: "suryapran", href: "/work/suryapran", label: { id: "Nutrimax", en: "Nutrimax" } },
   { slug: "kimia-farma", href: "/work/kimia-farma", label: { id: "Kimia Farma", en: "Kimia Farma" } },
   { slug: "sertifikat", href: "/work/sertifikat", label: { id: "Sertifikat", en: "Certificates" } },
   { slug: "pendidikan", href: "/work/pendidikan", label: { id: "Pendidikan", en: "Education" } },
@@ -177,8 +178,8 @@ export const pillars: Pillar[] = [
       {
         title: { id: "10× pertumbuhan", en: "10× growth" },
         desc: {
-          id: "omzet online 100 juta → 1 miliar per bulan di Suryapran Nutrisindo",
-          en: "online revenue IDR 100M → IDR 1B per month at Suryapran Nutrisindo",
+          id: "omzet online 100 juta → 1 miliar per bulan di Nutrimax (PT Suryaprana Nutrisindo)",
+          en: "online revenue IDR 100M → IDR 1B per month at Nutrimax (PT Suryaprana Nutrisindo)",
         },
       },
       {
@@ -214,7 +215,7 @@ export const pillars: Pillar[] = [
       id: "Laporan harian, mingguan, dan bulanan; kontrol barang keluar-masuk gudang; perhitungan HPP dan laporan penjualan.",
       en: "Daily, weekly and monthly reports; warehouse in-out control; cost-of-goods and sales reporting.",
     },
-    ctas: [{ label: { id: "Studi kasus Suryapran", en: "Suryapran case study" }, href: "/work/suryapran" }],
+    ctas: [{ label: { id: "Studi kasus Nutrimax", en: "Nutrimax case study" }, href: "/work/suryapran" }],
     stats: [
       { title: { id: "Laporan terjadwal", en: "Scheduled reporting" }, desc: { id: "harian, mingguan, dan bulanan", en: "daily, weekly and monthly" } },
       { title: { id: "Kontrol stok", en: "Stock control" }, desc: { id: "barang keluar-masuk & cek barang expired", en: "in-out goods & expiry checks" } },
@@ -235,6 +236,44 @@ export const pillars: Pillar[] = [
       { title: { id: "8+ proyek pemerintah", en: "8+ government projects" }, desc: { id: "kebutuhan instansi dengan SLA jelas", en: "agency needs with clear SLAs" } },
       { title: { id: "7+ cabang", en: "7+ branches" }, desc: { id: "operasional lintas kota & provinsi", en: "operations across cities & provinces" } },
     ],
+  },
+];
+
+/* ---------------------------------------------------------------- FAQ (C1) */
+
+export interface Faq {
+  q: L10n;
+  a: L10n;
+}
+
+export const faqs: Faq[] = [
+  {
+    q: { id: "Apa saja layanan yang kamu tawarkan?", en: "What services do you offer?" },
+    a: {
+      id: "Pemasaran digital & produk (marketing and product) untuk merek, disrupsi omzet online, serta pengelolaan klien — dari kebutuhan pelanggan sampai solusi yang terpasang.",
+      en: "Digital marketing & product work for brands, online-revenue growth, and client management — from customer needs to deployed solutions.",
+    },
+  },
+  {
+    q: { id: "Seperti apa hasil yang pernah kamu capai?", en: "What results have you delivered?" },
+    a: {
+      id: "Menumbuhkan omzet online sebuah bisnis dari 100 juta jadi 1 miliar rupiah/bulan, memenangkan Innovation Brand Award 2018, dan menangani 200+ klien di Rapid Network.",
+      en: "Grew a business's online revenue from IDR 100M to IDR 1B/month, won the 2018 Innovation Brand Award, and handled 200+ clients at Rapid Network.",
+    },
+  },
+  {
+    q: { id: "Bagaimana cara menghubungimu?", en: "How can I reach you?" },
+    a: {
+      id: "Melalui WhatsApp, email, LinkedIn, atau Instagram — semua tercantum di footer. Atau jadwalkan meeting dari kartu kalender di halaman ini.",
+      en: "Via WhatsApp, email, LinkedIn, or Instagram — all in the footer. Or book a meeting from the calendar card on this page.",
+    },
+  },
+  {
+    q: { id: "Apakah kamu tersedia untuk kolaborasi/proyek?", en: "Are you open to collaboration/projects?" },
+    a: {
+      id: "Ya — terbuka untuk peluang. Kalau kamu butuh help di pemasaran digital, produk, atau sales, kita bisa mulai dari obrolan singkat.",
+      en: "Yes — open to opportunities. If you need digital marketing, product, or sales help, let's start with a quick chat.",
+    },
   },
 ];
 
@@ -274,7 +313,7 @@ export const experiences: Experience[] = [
   },
   {
     slug: "suryapran",
-    company: "PT Suryapran Nutrisindo",
+    company: "PT Suryaprana Nutrisindo",
     role: { id: "Warehouse Supervisor", en: "Warehouse Supervisor" },
     period: "07/2020 – 03/2021",
     status: "portfolio",
@@ -369,8 +408,8 @@ export const workPages: Record<string, WorkPage> = {
   },
   suryapran: {
     label: { id: "Studi kasus", en: "Case study" },
-    title: { id: "Warehouse Supervisor di PT Suryapran Nutrisindo", en: "Warehouse Supervisor at PT Suryapran Nutrisindo" },
-    subtitle: { id: "07/2020 – 03/2021 · distribusi & ritel", en: "07/2020 – 03/2021 · distribution & retail" },
+    title: { id: "Warehouse Supervisor di PT Suryaprana Nutrisindo", en: "Warehouse Supervisor at PT Suryaprana Nutrisindo" },
+    subtitle: { id: "07/2020 – 03/2021 · distribusi & ritel (Nutrimax)", en: "07/2020 – 03/2021 · distribution & retail (Nutrimax)" },
     body: [
       {
         id: "Selain mengawasi barang keluar-masuk gudang dan memeriksa barang expired, saya mengelola social media perusahaan untuk meningkatkan strategi online.",
@@ -563,6 +602,11 @@ export const ui = {
   },
   navAria: { id: "Navigasi section", en: "Section navigation" },
   menuRole: { id: "peran", en: "role" },
+  menuCta: { id: "Jadwalkan meeting", en: "Book a meeting" },
+  faq: {
+    title: { id: "Tanya jawab", en: "FAQ" },
+    subtitle: { id: "Jawaban singkat soal layanan, hasil, dan cara terhubung.", en: "Quick answers about services, results, and how to connect." },
+  },
   playground: {
     the: { id: "Sang", en: "The" },
     title: { id: "Galeri", en: "Gallery" },

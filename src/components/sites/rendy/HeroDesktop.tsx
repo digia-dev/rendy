@@ -36,6 +36,8 @@ export async function HeroDesktop({ locale, todayISO }: Props) {
       className="relative z-0 flex min-h-[100svh] w-full flex-col bg-white md:sticky md:top-0 md:h-[100svh]"
     >
       <MenuBar locale={locale} role={profile.role} ariaRoleLabel={ui.menuRole[locale]} />
+      {/* A2 — tekstur radial dot halus di latar hero */}
+      <div className="bg-dots absolute inset-0 opacity-[0.45] -z-10" aria-hidden="true" />
       {/* ===================================================== desktop canvas */}
       <div className="relative hidden flex-1 bg-white md:block">
         <Draggable id="clock" initial={{ top: 70, left: 24 }}>
@@ -82,7 +84,15 @@ export async function HeroDesktop({ locale, todayISO }: Props) {
         {/* Hero heading & subtitle — terpusat sempurna via flex (sama seperti sumber) */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center">
           <div className="max-w-[760px]">
-            <h1 className="text-[48px] font-extrabold leading-[1.05] tracking-[-1.2px] text-black">
+            {/* Badge status (E3) */}
+            <span className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 py-1 pl-2 pr-3 text-[11px] font-semibold text-neutral-600 shadow-sm backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#34c759] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#34c759]" />
+              </span>
+              {hero.heroStatus[locale]}
+            </span>
+            <h1 className="mt-4 text-[48px] font-extrabold leading-[1.05] tracking-[-1.2px] text-black">
               {hero.line1[locale]}
               <br />
               {hero.line2Prefix[locale]}

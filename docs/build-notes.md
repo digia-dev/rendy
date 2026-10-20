@@ -34,10 +34,12 @@ agar teks dwibahasa tidak terpecah — struktur record tetap seperti tabel §8.2
 
 | Elemen | Status |
 |---|---|
-| Menu bar, hero sticky `md:top-0`, nav dock `sticky top-4 z-60` dengan `md:-mt-32 md:h-32` | 1:1 (dock adalah **sibling** hero di sumber, bukan anak — ini kunci agar dock tetap terlihat saat scroll) |
-| Kartu kaca (radius 16, blur 40px), marquee 96s, pilar sticky `top-24` menumpuk z-10..13, tab folder, jendela header kuning, `about-me.txt` | 1:1 — **pillar kini "stacked-card" minimalist** (keputusan pengguna): tab menonjol kiri via S-curve `clip-path:path()` ke header strip full-width `#e4e5e8`; label uppercase 600 letter-spaced `#6b6b70`; panel off-white `#f6f7f9`; bg `#fafafa`; tanpa border keras, hanya tonal halus |
+| Menu bar, hero sticky `md:top-0` | 1:1 (dock adalah **sibling** hero di sumber — dipecah: desktop `sticky top-4` utk md+, mobile `sticky bottom-4` melintasi konten & naik saat footer) |
+| Docker (nav) — **magnification ala macOS** | Ikon memperbesar kontinu saat pointer mendekat/sliding (kurva Gaussian/paradola, max ~1.45); berlaku desktop & mobile |
+| **Floating music mobile** | Tombol musik ala macOS (kanan-atas) + cover & equalizer; **drag & drop** ke posisi mana pun dengan **no-fly zone** agar tidak menutupi deck tengah |
+| Kartu kaca (radius 16, blur 40px), marquee 96s, pilar sticky `top-24` menumpuk z-10..13, tab folder, jendela header kuning, `about-me.txt` | 1:1 — **pillar kini "folder besar" macOS** (keputusan pengguna): tab folder besar (clip-path, `#e4e5e8`, label uppercase `#6b6b70`) menempel kiri + body off-white `#f6f7f9` berisi konten 2 kolom; bg `#fafafa`; tanpa border keras |
 | Section: achievements 5 kartu, portfolio **grid kartu abu** (bg `#f4f4f5` + ikon folder macOS, keputusan pengguna — menggantikan baris hairline), playground display + deck, contact 3 kolom | 1:1 |
-| Font | sistem Apple (OQ-5), bukan Bricolage Grotesque sumber |
+| Font | **Bricolage Grotesque** (webfont `next/font/google`, sama seperti sumber) — keputusan pengguna 21 Okt 2026 menggantikan font sistem Apple |
 | Marquee "In the press" | diisi sertifikat (tidak ada data press) |
 
 ## Penyimpangan sadar (tercatat, bukan bug)
@@ -122,11 +124,15 @@ agar teks dwibahasa tidak terpecah — struktur record tetap seperti tabel §8.2
    membuka halaman ringkasan `/work/pendidikan`.
 9. Logo media/lencana source (awwards/cssda, logo press, footage PNG) diganti SVG sendiri —
    lihat `docs/research/elenagonci/asset-map.md`.
+10. **Custom cursor scheme ala macOS (Capitaine-style)** (keputusan pengguna): SVG cursor di
+    `public/sites/rendy/cursors/` (arrow hitam outline putih, hand, I-beam, busy) menggantikan
+    semua state cursor di desktop (`@media pointer:fine`); **smooth scroll** via `SmoothAnchor`
+    (scrollIntoView, bukan hanya CSS) agar bekerja lintas-browser; **menu bar dropdown** macOS
+    (frosted glass, item link, tutup via klik-luar/Escape); **deck magnification** ala macOS.
 
 ## Masukan yang masih dibutuhkan
 
 - (opsional) konfirmasi foto profil = crop `Marketing_Sales_CV_Rendy.pdf` hal. 1 (sudah dipakai sementara).
-- Konfirmasi foto profil = crop `Marketing_Sales_CV_Rendy.pdf` hal. 1 (sudah dipakai sementara).
 
 ## Verifikasi Playwright
 

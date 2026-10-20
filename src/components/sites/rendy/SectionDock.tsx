@@ -1,3 +1,6 @@
+"use client";
+
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { ui, type Locale } from "@/data/site";
 import { NavGlyph } from "./icons";
 
@@ -53,12 +56,24 @@ const items: {
   },
 ];
 
+const BASE = 40; // ukuran dasar ikon (pin)
+const MAX_SCALE = 1.45; // pembesaran maksimum di tengah
+const RADIUS = 96; // radius pengaruh pointer (px)
+const MAX_LIFT = 12; // pengangkatan maksimum (px) saat membesar
+
+/** Skala & angkat ala macOS Dock berdasarkan jarak ikon → pointer. */
+function magnify(dist: number): number {
+  if (dist >= RADIUS) return 1;
+  const t = 1 - dist / RADIUS; // 0..1 (dekat = 1)
+  // kurva smooth (ease-out kuadratik)
+  const ease = 1 - (1 - t) * (1 - t);
+  return 1 + (MAX_SCALE - 1) * ease;
+}
+
 /**
- * Dock navigasi.
- * mode="top"   (desktop, md+): sticky di `top-4`, muncul di area hero & memudar
- *              saat scroll — perilaku asli seperti pada desktop.
- * mode="bottom"(mobile): sticky di `bottom-4`, menempel di bawah viewport,
- *              melintasi konten, dan naik/terangkat ketika menggulir ke footer.
+ * Dock navigasi dengan magnification ala macOS (icon membesar saat pointer
+ * mendekat/sliding). mode="top" utk desktop (sticky atas), mode="bottom"
+ * utk mobile (sticky bawah, naik saat footer).
  */
 export function SectionDock({
   locale,
@@ -71,34 +86,97 @@ export function SectionDock({
   weekdayShort: string;
   mode?: "top" | "bottom";
 }) {
+  const navRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [mouseX, setMouseX] = useState<number | null>(null);
+  const [centers, setCenters] = useState<number[]>([]);
+
   const wrapCls =
     mode === "top"
       ? "pointer-events-none sticky top-4 z-[60] flex justify-center px-4 py-3 md:flex md:-mt-32 md:h-32 md:items-start md:py-0 hidden"
       : "pointer-events-none sticky bottom-4 z-[60] flex justify-center px-4 pb-2 md:hidden";
+
+  // Ukur posisi pusat tiap ikon (relatif nav) sekali & saat ukuran berubah.
+  useLayoutEffect(() => {
+    const measure = () => {
+      const nav = navRef.current;
+      if (!nav) return;
+      const navRect = nav.getBoundingClientRect();
+      const cs = items.map((_, i) => {
+        const el = itemRefs.current[i];
+        if (!el) return 0;
+        const r = el.getBoundingClientRect();
+        return r.left - navRect.left + r.width / 2;
+      });
+      setCenters(cs);
+    };
+    measure();
+    const raf = requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  // Posisi pointer relatif terhadap nav.
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const rect = nav.getBoundingClientRect();
+    setMouseX(e.clientX - rect.left);
+  }, []);
+
+  const onPointerLeave = useCallback(() => setMouseX(null), []);
+
+  const scaleFor = (i: number): number => {
+    if (mouseX == null || centers.length === 0) return 1;
+    return magnify(Math.abs(centers[i] - mouseX));
+  };
+
   return (
     <div className={wrapCls}>
       <nav
+        ref={navRef}
         aria-label={ui.navAria[locale]}
-        className="glass-card pointer-events-auto flex items-start gap-2.5 rounded-2xl px-3 pb-2 pt-2"
+        onPointerMove={onPointerMove}
+        onPointerLeave={onPointerLeave}
+        className="glass-card pointer-events-auto flex items-end gap-2 rounded-2xl px-3 pb-1.5 pt-2"
       >
         {items.map((item, i) => {
           const external = item.href.startsWith("http");
           const label = item.label[locale];
-          // Efek hover macOS yang seamless: naik + membesar + cerah, easing smooth.
+          const scale = scaleFor(i);
+          const lift = scale - 1 > 0.02 ? MAX_LIFT * (scale - 1) / (MAX_SCALE - 1) : 0;
+
+          // kelas dasar ikon: gradien/putih + visual; transform di-set inline via scale.
           const iconCls =
-            "flex h-full w-full items-center justify-center overflow-hidden rounded-[24%] shadow-[0_2px_6px_rgba(0,0,0,0.25)] transition-[filter,transform,scale,translate,background-color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:scale-110 hover:brightness-110 " +
+            "flex h-full w-full items-center justify-center overflow-hidden rounded-[24%] shadow-[0_2px_6px_rgba(0,0,0,0.25)] transition-[filter,background-color] duration-150 " +
             item.bgCls;
+
           return (
-            <span key={item.key} className="flex items-start gap-2.5">
+            <span key={item.key} className="relative flex items-end">
               {i === 1 ? (
                 <span className="w-px self-start bg-black/15 md:mt-0.5 md:h-8" aria-hidden="true" />
               ) : null}
               <a
+                ref={(el) => {
+                  itemRefs.current[i] = el;
+                }}
                 href={item.href}
                 title={label}
                 aria-label={label}
                 {...(external ? { target: "_blank" as const, rel: "noopener noreferrer" } : {})}
-                className="relative aspect-square h-10 w-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
+                className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
+                style={{
+                  width: BASE, // pin maintain — transform scale akan memperbesarnya
+                  height: BASE,
+                  transform: `translateY(-${lift}px) scale(${scale})`,
+                  transformOrigin: "bottom center",
+                  transition: "transform 0.18s cubic-bezier(0.16,1,0.3,1), width 0.18s, height 0.18s",
+                  willChange: "transform",
+                  zIndex: scale > 1.05 ? 30 : 10,
+                }}
               >
                 {item.glyph === "calendar" ? (
                   <span className={iconCls} data-nav-cal>
