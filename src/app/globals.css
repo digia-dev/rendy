@@ -236,6 +236,16 @@
   }
 }
 
+/* Equalizer bergerak (floating music, mode mobile) */
+@keyframes eq-bounce {
+  from {
+    transform: scaleY(0.35);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

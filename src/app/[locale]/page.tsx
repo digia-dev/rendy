@@ -10,6 +10,7 @@ import { SectionDock } from "@/components/sites/rendy/SectionDock";
 import { PillarStack } from "@/components/sites/rendy/PillarStack";
 import { PlaygroundDeck } from "@/components/sites/rendy/PlaygroundDeck";
 import { PortfolioList } from "@/components/sites/rendy/PortfolioList";
+import { FloatingMusicMobile } from "@/components/sites/rendy/widgets/FloatingMusic";
 
 const tz = "Asia/Jakarta";
 
@@ -30,14 +31,20 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   return (
     <main>
       <HeroDesktop locale={l} todayISO={todayISO} />
-      {/* Sibling hero (sumber: parent utuh `min-h-screen` + `md:-mt-32 md:h-32`) agar dock sticky span halaman */}
-      <SectionDock locale={l} dayOfMonth={dayOfMonth} weekdayShort={weekdayShort} />
+      {/* Dock navigasi desktop — sticky di atas (perilaku asli md+) */}
+      <SectionDock mode="top" locale={l} dayOfMonth={dayOfMonth} weekdayShort={weekdayShort} />
       <AchievementsGrid locale={l} />
       <CertificatesMarquee locale={l} />
       <PillarStack locale={l} />
       <PortfolioList locale={l} />
       <PlaygroundDeck locale={l} />
       <AboutTxt locale={l} />
+      {/* Dock navigasi mobile — sticky di bawah, naik saat footer */}
+      <SectionDock mode="bottom" locale={l} dayOfMonth={dayOfMonth} weekdayShort={weekdayShort} />
+      {/* Floating music (mode mobile) */}
+      <div className="md:hidden">
+        <FloatingMusicMobile />
+      </div>
       <ContactFooter locale={l} />
       <p className="sr-only">{ui.navAria[l]}</p>
     </main>

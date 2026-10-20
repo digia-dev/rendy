@@ -54,22 +54,29 @@ const items: {
 ];
 
 /**
- * Dock navigasi — tiruan sumber: elemen `sticky top-4 z-[60] pointer-events-none`
- * di dalam hero agar tetap di atas konten saat scroll. Ikon 40×40: baris/garis
- * (line icons) Lubric/Lucide transparan + inisial "R" + kotak kalender putih;
- * satu pemisah vertikal setelah inisial.
+ * Dock navigasi.
+ * mode="top"   (desktop, md+): sticky di `top-4`, muncul di area hero & memudar
+ *              saat scroll — perilaku asli seperti pada desktop.
+ * mode="bottom"(mobile): sticky di `bottom-4`, menempel di bawah viewport,
+ *              melintasi konten, dan naik/terangkat ketika menggulir ke footer.
  */
 export function SectionDock({
   locale,
   dayOfMonth,
   weekdayShort,
+  mode = "top",
 }: {
   locale: Locale;
   dayOfMonth: number;
   weekdayShort: string;
+  mode?: "top" | "bottom";
 }) {
+  const wrapCls =
+    mode === "top"
+      ? "pointer-events-none sticky top-4 z-[60] flex justify-center px-4 py-3 md:flex md:-mt-32 md:h-32 md:items-start md:py-0 hidden"
+      : "pointer-events-none sticky bottom-4 z-[60] flex justify-center px-4 pb-2 md:hidden";
   return (
-    <div className="pointer-events-none sticky top-4 z-[60] flex justify-center px-4 py-3 md:-mt-32 md:h-32 md:items-start md:py-0">
+    <div className={wrapCls}>
       <nav
         aria-label={ui.navAria[locale]}
         className="glass-card pointer-events-auto flex items-start gap-2.5 rounded-2xl px-3 pb-2 pt-2"
