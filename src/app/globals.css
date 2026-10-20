@@ -7,7 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto,
+    system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -126,5 +128,119 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+    scroll-padding-top: 96px;
+  }
+}
+
+/* ------------------------------------------------------------------ clone
+   Token yang diambil dari sumber (docs/research/elenagonci/page-brief.md):
+   kartu kaca, marquee, font sistem Apple (keputusan desain OQ-5). */
+
+.glass-card {
+  border-radius: 16px;
+  background-color: rgba(255, 255, 255, 0.62);
+  border: 0.8px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 8px 32px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(40px) saturate(1.5);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5);
+}
+
+/* Slider progres pemutar musik di kartu widget (tipis, bulat, ala macOS). */
+.music-range {
+  height: 4px;
+}
+
+/* ------------------------------------------------------------------ stacked-card
+   Tab + header strip "paper stack" — tab menonjol dari kiri header dengan
+   transisi S-curve halus ke strip full-width; content off-white di bawah.
+   Abu-biru muda `#e4e5e8` (tab & header) / off-white `#f6f7f9` (panel) /
+   bg halaman `#fafafa`. Tanpa border keras / bayangan berat — kedalaman dari
+   perbedaan tonal halus. */
+.stack-card {
+  background: #f6f7f9;
+  border-radius: 30px 30px 18px 18px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02), 0 22px 40px -28px rgba(60, 64, 80, 0.18);
+}
+
+.stack-header {
+  position: relative;
+  background: #e4e5e8;
+  border-radius: 30px 30px 0 0;
+}
+
+.stack-tab {
+  position: absolute;
+  left: 24px;
+  top: -18px; /* menonjol ke atas dari header strip */
+  width: 290px;
+  height: 84px;
+  background: #e4e5e8;
+  /* tab menonjol: kiri membulat penuh, S-curve masuk ke badan header, kanan lurus */
+  clip-path: path(
+    "M0,34 C0,16 16,0 36,0 L204,0 C220,0 232,6 243,20 C252,31 260,50 262,66 C263,72 256,76 244,77 L38,77 C16,77 0,57 0,34 Z"
+  );
+  border-radius: 24px 16px 12px 10px;
+  box-shadow: 0 -6px 14px -8px rgba(60, 64, 80, 0.10);
+}
+
+.stack-tab-label {
+  position: absolute;
+  left: 36px;
+  top: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  color: #6b6b70;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.music-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: #18181b;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.music-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: #18181b;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.music-range::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+}
+
+.marquee-track {
+  animation: marquee-scroll 96s linear infinite;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .marquee-track {
+    animation: none;
   }
 }

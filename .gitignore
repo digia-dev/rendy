@@ -47,3 +47,17 @@ next-env.d.ts
 
 # Local temp files
 temp/
+
+# Private / do-not-publish (PRD §7)
+Marketing_Sales_CV_Rendy.pdf
+*.pdf
+
+# Reference screenshot / example image (not part of the site)
+public/screenshoot.png
+
+# Local tooling / test artifacts (not project source)
+.opencode/
+.playwright-mcp/
+docs/research/**/local-*.png
+docs/research/**/*.png
+docs/research/**/screenshots/
