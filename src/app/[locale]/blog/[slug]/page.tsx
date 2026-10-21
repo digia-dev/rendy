@@ -84,14 +84,7 @@ export default async function BlogPostPage({
           <PostReader
             locale={l}
             post={post}
-            toolbarExtra={
-              <PostActions
-                slug={post.slug}
-                locale={l}
-                availableLocales={post.availableLocales}
-                neutral={post.neutral}
-              />
-            }
+            toolbarExtra={<PostActions locale={l} />}
           />
         </NotesWindow>
       </div>

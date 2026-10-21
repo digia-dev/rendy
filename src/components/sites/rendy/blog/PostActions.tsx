@@ -2,21 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Link2 } from "lucide-react";
-import { Link } from "@/i18n/navigation";
 import { ui, type Locale } from "@/data/site";
 
-interface Props {
-  slug: string;
-  locale: Locale;
-  availableLocales: Locale[];
-  /** Post netral (konten sama di semua bahasa) — tombol ganti bahasa disembunyikan. */
-  neutral?: boolean;
-}
-
 /**
- * Aksi di header reader: ganti bahasa (jika ada terjemahan berbeda) + salin tautan.
+ * Aksi di header reader: salin tautan. Ganti bahasa kini lewat pemilih
+ * ID/EN di titlebar jendela Notes (BlogLangSwitcher) — berlaku untuk
+ * daftar maupun post — sehingga tombol "Baca versi" per-post dihapus
+ * agar tidak ganda.
  */
-export function PostActions({ slug, locale, availableLocales, neutral = false }: Props) {
+export function PostActions({ locale }: { locale: Locale }) {
   const t = ui.blog;
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -27,10 +21,6 @@ export function PostActions({ slug, locale, availableLocales, neutral = false }:
     },
     [],
   );
-
-  const other: Locale = locale === "id" ? "en" : "id";
-  // Post netral: konten identik di semua bahasa — ganti bahasa tidak berguna.
-  const canSwitch = !neutral && availableLocales.includes(other);
 
   const onCopy = async () => {
     try {
@@ -45,15 +35,6 @@ export function PostActions({ slug, locale, availableLocales, neutral = false }:
 
   return (
     <>
-      {canSwitch ? (
-        <Link
-          href={`/blog/${slug}`}
-          locale={other}
-          className="rounded-md bg-black/[0.055] px-2 py-1 text-[11.5px] font-medium text-neutral-600 transition-colors hover:bg-black/[0.09] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
-        >
-          {t.switchLang[locale]} {other === "id" ? "ID" : "EN"}
-        </Link>
-      ) : null}
       <button
         type="button"
         onClick={onCopy}
