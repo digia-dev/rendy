@@ -170,7 +170,7 @@ export function SectionDock({
                   className={`${scaleCls} h-10 w-10 rounded-[20%] md:h-12 md:w-12 md:rounded-[24%]`}
                 >
                   <span
-                    className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[20%] ${item.iconCls} md:rounded-[24%]`}
+                    className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[20%] shadow-[0_2px_6px_rgba(0,0,0,0.25)] ${item.iconCls} md:rounded-[24%]`}
                   >
                     <NavGlyph id={item.glyph} />
                   </span>

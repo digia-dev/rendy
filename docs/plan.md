@@ -1,100 +1,179 @@
-# Rendy Site UI/UX Improvement Plan
+# Rencana Fitur Blog — Rendy Site (macOS design)
 
-## Summary
-Refactoring Rendy Giantara site to eliminate generated-templates tells and align with Better Design principles.
+> Pengganti rencana UI/UX lama (P0–P2 sudah selesai dikerjakan).
+> Keputusan user: **Hybrid MDX + password-protected admin**, desain **Notes.app-style**,
+> akses via **MenuBar + RSS/sitemap**, **tanpa icon dock baru**.
 
-## Critical Issues (P0)
+## 1. Ringkasan
 
-### 1. Left-Border Accent Callout Boxes (rule/no-left-border-callouts)
-**Problem:** Every section uses `<div className="border-l-4 border-blue-500 bg-blue-50 p-4">` with an eyebrow pill label above content — this is a classic generated-interface tell.
-**Fix:** Replace with real cards (all four sides, surface fill) or inline emphasis inside the card body.
+Menambahkan fitur blog berbahasa Indonesia + Inggris dengan desain jendela macOS ala Notes.app:
+list artikel di panel kiri, konten artikel di panel kanan. Konten disimpan sebagai file MDX
+di repo (`src/content/blog/`), dibaca saat build (SSG) — sama seperti pola `readGalleryDir()`.
+Tersedia halaman `/admin` ber-password untuk menulis/mengedit post dari browser tanpa sentuh kode.
 
-### 2. Dot-Joined Metadata Lines (rule/no-dot-joined-meta-lines)
-**Problem:** Lines like `"Ari from Mono · Waiting 18 min"` chain unrelated facts with middle dots.
-**Fix:** Use separate `<p>` elements or comma-separated lists; give each fact its own line.
+## 2. Dependencies
 
-### 3. Spaced Capital Labels (rule/no-spaced-capital-labels)
-**Problem:** Section headers use `font-mono uppercase tracking-widest text-xs` (e.g., "Total revenue", "Recent activity"). These are readability killers.
-**Fix:** Use sentence case at the system's own size; keep `font-mono` only for code/IDs/short tokens.
+| Package | Untuk | Status |
+|---|---|---|
+| `gray-matter` | Parsing frontmatter MDX | ✅ terpasang |
+| `next-mdx-remote@6` (RSC `compileMDX`) | Render MDX → React di server | ✅ terpasang |
+| `remark-gfm` | Tabel/task-list markdown | ✅ terpasang |
 
-### 4. Gradient Hero Template (rule/no-template-hero-defaults)
-**Problem:** Main page uses gradient hero + eyebrow pill + centered three-card grid + glassmorphism panels — the most recognizable generated landing-page shape.
-**Fix:** Replace with plain background, real cards, or design-system native surfaces.
+> Cek docs lokal `node_modules/next/dist/docs/01-app/02-guides/mdx.md` (Next 16):
+> `@next/mdx` tidak support frontmatter bawaan → `gray-matter` dipakai memisahkan frontmatter,
+> lalu `compileMDX` dari `next-mdx-remote/rsc` me-render body-nya (aman untuk RSC).
+> Auth tidak perlu NextAuth: 1 password env + cookie HMAC-signed (lihat §6).
 
-### 5. Default Violet/Indigo Accent (rule/no-default-violet-accent)
-**Problem:** Violet (#8b5cf6) and indigo (#6366f1) are default accents across buttons/badges/highlights. Brand tokens don't match.
-**Fix:** Use project's actual accent color (likely blue/green). Remove gradient backgrounds unless brand-specific.
+## 3. Struktur file
 
-### 6. Unrequested Dark Mode (rule/no-unrequested-dark-mode)
-**Problem:** No dark theme was requested but appears in the codebase. Either build it completely or remove any toggle.
-**Fix:** If not needed, delete all dark-mode styling and toggles.
+```
+src/content/blog/                  # sumber konten (build-time fs read)
+  <slug>.id.mdx
+  <slug>.en.mdx
+src/lib/blog.ts                    # readPostFiles(), listPosts(), getPost() — mirror gallery.ts
+src/lib/rss.ts                     # buildRss(locale)
+src/lib/site-url.ts                # siteUrl() absolut untuk RSS/sitemap
+src/lib/admin-auth.ts              # signSession/verifySession (HMAC) + checkPassword timing-safe
+src/lib/admin-session.ts           # isAdminAuthenticated() dari cookie
+src/lib/blog-admin.ts              # savePost()/deletePost() — fs (dev) vs GitHub Contents API (prod)
+src/app/[locale]/blog/page.tsx     # Notes-style list (SSG)
+src/app/[locale]/blog/[slug]/page.tsx  # artikel (SSG)
+src/app/[locale]/admin/page.tsx    # gate: login dialog → editor (dynamic, noindex)
+src/app/api/admin/login/route.ts   # POST: verify password → set signed httpOnly cookie
+src/app/api/admin/logout/route.ts  # POST: clear cookie
+src/app/api/admin/posts/route.ts   # GET/POST/DELETE (wajib login)
+src/app/rss.xml/route.ts           # feed utama (locale default)
+src/app/[locale]/rss.xml/route.ts  # feed per-locale: /id/rss.xml, /en/rss.xml
+src/app/sitemap.ts                 # home, playground, work, blog, tiap blog slug (per locale)
+src/app/robots.ts                  # allow publik, disallow /admin + /api/
+src/components/sites/rendy/blog/
+  NotesWindow.tsx                  # kerangka jendela: traffic lights + toolbar + 2 pane
+  PostListSidebar.tsx              # search + baris post (judul/tanggal/snippet, badge draft/fallback)
+  PostReader.tsx                   # header meta + konten MDX (prose styling eksplisit)
+  PostActions.tsx                  # ganti bahasa + salin tautan (client)
+  AdminGate.tsx                    # login dialog macOS-style + editor form (client)
+```
 
-## High Priority (P1)
+Akses:
+- **MenuBar**: dropdown "Blog" berisi 3 post terbaru + "Semua artikel" + RSS (data di-pass dari `HeroDesktop`).
+- **Dock**: TIDAK ditambah icon baru (sesuai pilihan user). `SectionDock` tidak diubah.
 
-### 7. Card-as-Container Abuse (rule/no-decorative-cards-pills-icons)
-**Problem:** Single paragraphs wrapped in rounded cards, single stats in pills, nav items in cards.
-**Fix:** Flatten where possible; group related content into proper sections rather than individual containers.
+## 4. Format konten (frontmatter bilingual)
 
-### 8. Orphaned Empty States
-**Problem:** Empty-state sections contain generic placeholder text ("Your data is ready.") without context or next actions.
-**Fix:** Add meaningful copy explaining what happened and what the user should do next.
+Satu pasang file per post (`slug.id.mdx` + `slug.en.mdx`), di-pair by slug — tubuh artikel
+beda per bahasa. Frontmatter:
 
-### 9. Redundant Second Page Titles (rule/one-visible-page-title)
-**Problem:** Duplicate `<h1>` and `<h2>` pairs (e.g., "Outreach" appears twice).
-**Fix:** Keep exactly one primary heading per section.
+```yaml
+---
+title: "Judul artikel"
+date: 2026-10-21
+excerpt: "Ringkasan singkat untuk list & meta description."
+tags: ["marketing", "product"]
+draft: true          # true → tampil hanya di admin, tidak di publik/RSS
+cover: "/sites/rendy/blog/cover.jpg"   # opsional
+---
+```
 
-### 10. Ceremonial Copy with No Job (rule/no-ceremonial-copy)
-**Problem:** Headings that don't name a person, alternative, difference, or concrete benefit.
-**Fix:** Rewrite to be specific: who benefits, what they gain, why it matters.
+- `src/lib/blog.ts`: `fs.readdir` + `gray-matter`; pair by slug; post 1 bahasa tetap tampil
+  (fallback + badge di UI); sort desc by `date`; draft difilter kecuali mode admin.
+- `generateStaticParams` hanya memakai slug non-draft; akses draft via URL → `notFound()`.
+- SSG: file baru butuh rebuild/deploy di prod, live di dev — konvensi yang diterima.
 
-## Medium Priority (P2)
+## 5. Halaman publik — Notes.app design
 
-### 11. Banned Words & Filler Adjectives (rule/no-banned-words)
-**Problem:** Words like "powerful," "seamless," "effortless," "beautiful," "cutting-edge," "paradigm shift," etc. add zero clarity.
-**Fix:** Cut filler words; replace with precise language.
+**`/[locale]/blog`** dan **`/[locale]/blog/[slug]`** memakai `NotesWindow` yang sama:
 
-### 12. Generic CTAs (rule/no-reward-matches-user-value)
-**Problem:** Buttons say "Get started," "Learn more," "Sign up" without outcome.
-**Fix:** Make them outcome-driven: "Predict matches now," "Join the league," "Create your team."
+- **Window chrome**: rounded-2xl, `bg-white`, soft shadow, titlebar `#f4f4f5` + 3 traffic
+  lights (merah = kembali ke beranda), toolbar tipis, dua pane.
+- **Pane kiri (list)**: search input (filter client-side judul/excerpt/tag), baris post =
+  judul + tanggal + excerpt; post terpilih `bg-[#e8e8ed]` ala Notes selection; badge
+  "Draf" (kuning) & "Hanya tersedia dalam ID/EN" untuk fallback bahasa.
+  Empty state bermakna + link kembali ke beranda.
+- **Pane kanan (reader)**: meta (tanggal • reading time • tags) + judul besar + konten MDX
+  dengan styling prose eksplisit (tanpa border kiri), `scroll-mt` headings.
+- **Mobile (390)**: single-pane — list page tampilkan sidebar, post page tampilkan reader
+  + tombol back "‹ Semua artikel"; keduanya di CSS (`md:` breakpoints), tanpa JS state.
+- **Bilingual**: chrome dari locale UI; konten dari file per-bahasa; tombol "Baca versi
+  ID/EN" muncul hanya jika versi bahasa lain tersedia (`availableLocales`).
+- Metadata per post: title/excerpt/OG article + `alternates.languages`.
 
-### 13. Missing Action Verbs
-**Problem:** Links say "Click here," "View details," "Read more."
-**Fix:** Use purpose-driven verbs: "Start predicting," "See your forecast," "Explore features."
+**RSS & sitemap**:
+- `/rss.xml` (locale default) + `/id/rss.xml` + `/en/rss.xml` (RSS 2.0 + atom:link self).
+  Draft otomatis tersaring oleh `listPosts()`.
+- `src/app/sitemap.ts`: semua halaman utama + work slug + blog index & slug per locale,
+  dengan `alternates.languages`; `src/app/robots.ts` mendaftarkan sitemap + disallow admin/API.
 
-### 14. Inconsistent Tone
-**Problem:** Mix of formal ("The platform provides"), casual ("Check it out!"), and fragmented ("Build interfaces people can trust.")
-**Fix:** Align toward consistent professional yet approachable voice.
+## 6. Admin (login sederhana, tanpa database)
 
-## Secondary Improvements
+**Auth model — single password:**
+- Env: `BLOG_ADMIN_PASSWORD` (password) + `BLOG_ADMIN_SECRET` (sign cookie).
+- `POST /api/admin/login`: timing-safe compare → set cookie httpOnly+secure `rendy_admin`
+  = `<expiryMs>.<hmac-sha256>` (expiry 12 jam).
+- `GET/POST/DELETE /api/admin/*`: `verifySession()` (signature + expiry, timing-safe) → 401.
+- `logout`: hapus cookie.
+- Halaman `/[locale]/admin`: `dynamic = "force-dynamic"`, `robots: noindex`; belum login →
+  dialog login macOS-style; sesudah → editor (daftar file + form).
+- Guard: cookie diverifikasi di **server page + setiap API route** (cukup & tanpa redirect
+  loop; baca data admin tidak pernah terjadi sebelum auth).
 
-### 15. Touch Target Sizing
-**Problem:** Buttons and interactive elements average ~32px.
-**Fix:** Increase critical action targets to ≥44px.
+**Editor (Notes.app-style):**
+- Pane kiri: semua file termasuk draft (badge kuning) + tombol "Post baru".
+- Pane kanan: form slug, tab bahasa ID/EN, judul, tanggal, excerpt, tags, draft toggle,
+  textarea MDX, aksi Simpan/Hapus + link "Lihat di situs" (post published).
+- Status save: `backend: "github"` → "commit terkirim, deploy menyusul"; `backend: "fs"` →
+  reminder rebuild.
 
-### 16. Responsive Typography
-**Problem:** Some headlines exceed 72pt (unreadable); others shrink below 14px (hard to read).
-**Fix:** Audit with `text-wrap: balance`; target 45–75 character max width for headlines.
+**⚠ Vercel (fs read-only/ephemeral) — keputusan implementasi:**
+`savePost()`/`deletePost()` memilih backend otomatis:
+- **Ada `GITHUB_TOKEN` + `GITHUB_REPO`** → tulis via GitHub Contents API (PUT/DELETE
+  dengan sha), commit ke `GITHUB_BRANCH` (default `main`) → permanen di git → Vercel
+  auto-rebuild (post live ~1 menit setelah save).
+- **Tanpa itu (lokal dev)** → tulis langsung `fs` ke `src/content/blog/`.
+- Env opsional: `GITHUB_BRANCH`, `NEXT_PUBLIC_SITE_URL` (URL absolut RSS/sitemap).
 
-### 17. Performance & Lazy Loading
-**Problem:** Heavy icon imports may cause layout shifts.
-**Fix:** Lazy-load non-critical icons behind the fold if not immediately visible.
+## 7. Urutan implementasi & status
 
-## Implementation Order
+1. **Fondasi**: deps → `src/lib/blog.ts` + 4 post contoh (3 published, 1 draft) → ✅
+2. **Halaman publik**: `NotesWindow` → list → reader → mobile single-pane → metadata → ✅
+3. **Integrasi site**: dropdown "Blog" di `MenuBar.tsx` (+ props `blogPosts`) → ✅
+4. **RSS + sitemap + robots** → ✅
+5. **Admin**: auth lib → login/logout/posts API → `AdminGate` (login + editor) →
+   `savePost()` fs/GitHub → ✅
+6. **Verifikasi**: `npm run check` (lint + typecheck + build) → uji 390/1440 manual,
+   uji login salah/benar, draft tidak tampil di publik/RSS, RSS valid, sitemap lengkap.
 
-1. **P0 Fixes First** — Left-border callouts → dot-joined lines → spaced capitals → gradient hero → accent colors
-2. **P1 Fixes** — Card-as-container cleanup → orphaned empty states → redundant titles → ceremonial copy
-3. **P2 Fixes** — Banned words → CTAs → action verbs → tone consistency
-4. **Secondary** — Touch targets → responsive typography → performance
+## 8. Kriteria sukses
 
-## Success Criteria
+- `/{id}/blog` & `/{en}/blog` render SSG, list + reader ala Notes.app, theme terang
+  konsisten (putih, shadow lembut, tanpa border keras).
+- Mobile 390: single-pane, back navigation berfungsi, tanpa overflow horizontal.
+- Artikel per bahasa sesuai route; fallback jelas jika 1 bahasa belum ada.
+- Draft tidak tampil di publik, sitemap, maupun RSS.
+- `/admin` butuh password; cookie expired 12 jam; salah password → error ala macOS dialog.
+- Save dari admin (di Vercel, dengan `GITHUB_TOKEN`) → commit MDX di repo → deploy ulang
+  otomatis.
+- `/rss.xml` (+ per-locale) valid & `sitemap.ts` mencakup semua slug blog.
+- `npm run check` hijau; tidak ada `any`; privasi tetap terjaga (tanpa KTP/NIK/alamat).
 
-- Zero left-border callout boxes remain
-- No dot-joined metadata lines
-- All section labels use sentence case
-- Hero uses flat surfaces, no gradients
-- Accent color matches project tokens
-- No duplicate headings
-- No banned words (delve, foster, leverage, etc.)
-- All CTA buttons have outcome-focused copy
-- Touch targets ≥44px for interactive elements
-- Empty states provide clear next steps
+## 9. Risiko & catatan
+
+- GitHub API commit butuh token; token hilang → admin tulis gagal (baca lokal tetap jalan).
+- Rebuild penuh tiap save post (site kecil, masih murah).
+- MDX ditulis admin lewat form (tanpa live preview penuh) — link "Lihat di situs" untuk preview.
+- Jika nanti butuh komentar/analytics post, pertimbangkan database — di luar scope sekarang.
+
+## Konfigurasi environment
+
+```bash
+# Wajib untuk admin aktif:
+BLOG_ADMIN_PASSWORD=...
+BLOG_ADMIN_SECRET=...        # minimal 8 char; dev fallback otomatis jika kosong
+
+# Opsional — admin tulis dari Vercel (persisten di git):
+GITHUB_TOKEN=ghp_...         # fine-grained PAT, Contents: Read & write
+GITHUB_REPO=digia-dev/rendy
+GITHUB_BRANCH=main           # default "main"
+
+# Opsional — URL absolut RSS/sitemap:
+NEXT_PUBLIC_SITE_URL=https://example.com
+```

@@ -742,6 +742,32 @@ export const ui = {
   backToHome: { id: "← Kembali ke beranda", en: "← Back to home" },
   caseStudy: { id: "STUDI KASUS", en: "CASE STUDY" },
   currentRoleBadge: { id: "PERAN SAAT INI", en: "CURRENT ROLE" },
+  blog: {
+    menuLabel: { id: "Blog", en: "Blog" },
+    allPosts: { id: "Semua artikel", en: "All posts" },
+    windowTitle: { id: "Catatan", en: "Notes" },
+    searchPlaceholder: { id: "Cari artikel", en: "Search posts" },
+    emptyState: {
+      id: "Belum ada artikel. Tulis post pertama lewat halaman admin.",
+      en: "No posts yet. Write your first post via the admin page.",
+    },
+    noResults: {
+      id: "Tidak ada artikel yang cocok.",
+      en: "No posts match your search.",
+    },
+    pickPrompt: {
+      id: "Pilih artikel di daun kiri untuk mulai membaca.",
+      en: "Pick a post from the sidebar to start reading.",
+    },
+    backToList: { id: "‹ Semua artikel", en: "‹ All posts" },
+    minutes: { id: "mnt baca", en: "min read" },
+    draft: { id: "Draf", en: "Draft" },
+    onlyIn: { id: "Hanya tersedia dalam", en: "Only available in" },
+    switchLang: { id: "Baca versi", en: "Read in" },
+    copyLink: { id: "Salin tautan", en: "Copy link" },
+    copied: { id: "Tautan disalin", en: "Link copied" },
+    rss: { id: "RSS", en: "RSS" },
+  },
 } as const;
 
 export const monthsShort = {

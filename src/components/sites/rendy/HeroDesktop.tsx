@@ -9,6 +9,7 @@ import { ClockCard } from "./widgets/ClockCard";
 import { MusicCard, PhotoCard } from "./widgets/StaticCards";
 import { WeatherCard } from "./widgets/WeatherCard";
 import { readGalleryDir } from "@/lib/gallery";
+import { listPosts } from "@/lib/blog";
 
 interface Props {
   locale: Locale;
@@ -33,12 +34,14 @@ function FolderLink({ href, label, aria }: { href: string; label: string; aria: 
 export async function HeroDesktop({ locale, todayISO }: Props) {
   // Baca galeri dari folder public/sites/rendy/gallery (otomatis, tanpa daftar).
   const gallery = await readGalleryDir();
+  // 3 post blog terbaru untuk dropdown MenuBar.
+  const blogPosts = (await listPosts(locale)).slice(0, 3).map((p) => ({ slug: p.slug, title: p.title }));
   return (
     <section
       id="top"
       className="relative z-0 flex min-h-[100svh] w-full flex-col bg-white pt-8 md:sticky md:top-0 md:h-[100svh]"
     >
-      <MenuBar locale={locale} role={profile.role} ariaRoleLabel={ui.menuRole[locale]} />
+      <MenuBar locale={locale} role={profile.role} ariaRoleLabel={ui.menuRole[locale]} blogPosts={blogPosts} />
       {/* A2 — tekstur radial dot halus di latar hero */}
       <div className="bg-dots absolute inset-0 opacity-[0.45] -z-10" aria-hidden="true" />
       {/* ===================================================== desktop canvas */}

@@ -7,6 +7,8 @@ interface Props {
   locale: Locale;
   role: L10n;
   ariaRoleLabel: string;
+  /** 3 post terbaru untuk dropdown Blog (di-pass dari server). */
+  blogPosts?: { slug: string; title: string }[];
 }
 
 interface DropItem {
@@ -20,7 +22,7 @@ interface DropItem {
  * Bar tipis `h-8` frosted glass (blur) di atas; kiri = logo + menu item dengan
  * dropdown bergaya macOS, kanan = jam. Konten tetap mengikuti data profil.
  */
-export function MenuBar({ locale, role, ariaRoleLabel }: Props) {
+export function MenuBar({ locale, role, ariaRoleLabel, blogPosts = [] }: Props) {
   const [now, setNow] = useState<Date | null>(null);
   const barRef = useRef<HTMLElement>(null);
 
@@ -65,6 +67,19 @@ export function MenuBar({ locale, role, ariaRoleLabel }: Props) {
       items: [
         { href: "/playground", label: locale === "id" ? "Buka galeri" : "Open gallery" },
         { href: "#top", label: locale === "id" ? "Pengesahan" : "Showcase" },
+      ],
+    },
+    {
+      key: "blog",
+      label: "Blog",
+      items: [
+        ...blogPosts.map((p, i) => ({
+          href: `/${locale}/blog/${p.slug}`,
+          label: p.title,
+          ...(i === blogPosts.length - 1 && blogPosts.length > 0 ? { sep: true } : {}),
+        })),
+        { href: `/${locale}/blog`, label: locale === "id" ? "Semua artikel" : "All posts" },
+        { href: `/${locale}/rss.xml`, label: `${locale === "id" ? "Berlangganan RSS" : "Subscribe via RSS"}`, sep: blogPosts.length === 0 },
       ],
     },
     {
