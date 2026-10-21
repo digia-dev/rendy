@@ -24,7 +24,13 @@
     "shadcn-ui"
   ],
   "engines": {
-    "node": ">=24"
+    "node": "24.x"
+  },
+  "allowScripts": {
+    "@parcel/watcher": true,
+    "@swc/core": true,
+    "msw": true,
+    "unrs-resolver": true
   },
   "scripts": {
     "dev": "next dev",
