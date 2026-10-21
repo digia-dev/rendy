@@ -52,7 +52,12 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
     .sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
 
   return (
-    <main className="flex min-h-[100svh] items-start justify-center bg-[#f5f5f7] px-3 pt-14 pb-8 md:px-6 md:pt-16">
+    <main
+      className={`flex min-h-[100svh] justify-center bg-[#f5f5f7] px-3 pb-8 md:px-6 ${
+        // Belum login → dialog login di tengah layar; sesudah login → editor menempel atas.
+        authed ? "items-start pt-14 md:pt-16" : "items-center py-10"
+      }`}
+    >
       {/* Mobile: admin hanya untuk desktop — tampilkan pesan ala dialog macOS. */}
       <div className="mt-6 w-full max-w-[400px] overflow-hidden rounded-2xl bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12)] md:hidden">
         <div className="relative flex items-center justify-center border-b border-black/[0.06] bg-[#f4f4f5] px-3 py-2.5">
@@ -84,8 +89,9 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
         </div>
       </div>
 
-      {/* Desktop: editor admin. */}
-      <div className="hidden w-full md:block">
+      {/* Desktop: editor admin — flex justify-center agar dialog login (360px)
+          maupun window editor (1180px) selalu horizontal di tengah layar. */}
+      <div className="hidden w-full md:flex md:justify-center">
         <AdminGate locale={l} authed={authed} initialPosts={posts} />
       </div>
     </main>
