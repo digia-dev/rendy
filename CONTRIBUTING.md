@@ -37,11 +37,11 @@ Edit the canonical skill and its references directly. There is no generation or 
 
 ## Submitting a pull request
 
-1. **Fork** the repo and create a branch off `master` (e.g. `fix/skill-hover-extraction` or `docs/clarify-setup`).
+1. **Fork** the repo and create a branch off `main` (e.g. `fix/skill-hover-extraction` or `docs/clarify-setup`).
 2. Make your focused change in the appropriate source-of-truth file.
 3. Run `npm run check` and make sure it passes.
 4. Write a clear commit message that describes the change. Prefixes such as `fix:`, `feat:`, or `docs:` are welcome but not required.
-5. Open a PR against `master`, fill out the PR template, and link a relevant issue when one exists (for example, `Closes #123`).
+5. Open a PR against `main`, fill out the PR template, and link a relevant issue when one exists (for example, `Closes #123`).
 6. Keep PRs focused — one logical change per PR is much easier to review and merge.
 
 ## Questions
