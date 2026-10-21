@@ -20,8 +20,11 @@ export interface PostFrontmatter {
 /** Metadata untuk list/RSS/sitemap (tanpa body). */
 export interface PostMeta extends PostFrontmatter {
   slug: string;
-  /** Bahasa file konten yang terbaca (bisa beda dari locale UI jika fallback). */
-  sourceLocale: Locale;
+  /**
+   * true = post memakai file netral (`<slug>.mdx`) yang tampil di semua bahasa;
+   * false = post punya file per-bahasa (`<slug>.<locale>.mdx`).
+   */
+  neutral: boolean;
   /** Bahasa yang tersedia untuk slug ini. */
   availableLocales: Locale[];
   readingMinutes: number;
@@ -35,12 +38,17 @@ export interface Post extends PostMeta {
 
 interface RawFile extends PostFrontmatter {
   slug: string;
-  locale: Locale;
+  /** null = file netral (`<slug>.mdx`) yang dipakai semua locale. */
+  locale: Locale | null;
   body: string;
 }
 
-/** `hello.id.mdx` → { slug: "hello", locale: "id" } — null jika bukan pola yang dikenal. */
-function parseName(name: string): { slug: string; locale: Locale } | null {
+/**
+ * `hello.id.mdx` → { slug: "hello", locale: "id" }
+ * `hello.mdx`    → { slug: "hello", locale: null } (netral — tampil semua bahasa)
+ * null jika bukan pola yang dikenal.
+ */
+function parseName(name: string): { slug: string; locale: Locale | null } | null {
   if (!name.toLowerCase().endsWith(".mdx")) return null;
   const base = name.slice(0, -4);
   for (const locale of LOCALES) {
@@ -49,6 +57,8 @@ function parseName(name: string): { slug: string; locale: Locale } | null {
       if (slug.length > 0) return { slug, locale };
     }
   }
+  // Tanpa suffix bahasa → netral (tampil di semua locale).
+  if (base.length > 0 && !base.includes(".")) return { slug: base, locale: null };
   return null;
 }
 
@@ -108,7 +118,7 @@ export async function readPostFiles(): Promise<RawFile[]> {
 
 function toMeta(
   slug: string,
-  sourceLocale: Locale,
+  neutral: boolean,
   availableLocales: Locale[],
   fm: PostFrontmatter,
   body: string,
@@ -116,7 +126,7 @@ function toMeta(
   return {
     ...fm,
     slug,
-    sourceLocale,
+    neutral,
     availableLocales,
     readingMinutes: readingMinutesOf(body),
     url: `/${slug}`,
@@ -126,8 +136,8 @@ function toMeta(
 /**
  * Daftar post untuk satu locale, terbaru dulu.
  * - Draft disertakan hanya jika `includeDrafts` (dipakai halaman admin).
- * - Jika slug tidak punya file pada locale yang diminta, fallback ke bahasa yang
- *   ada (sourceLocale menandai aslinya) supaya post single-bahasa tetap tampil.
+ * - Resolusi per slug: file `<slug>.<locale>.mdx` > netral `<slug>.mdx` >
+ *   file bahasa lain (post lama single-bahasa tetap tampil).
  */
 export async function listPosts(
   locale: Locale,
@@ -147,12 +157,13 @@ export async function listPosts(
     if (published.length === 0) continue;
 
     const exact = published.find((f) => f.locale === locale);
-    const chosen = exact ?? published[0];
+    const neutral = published.find((f) => f.locale === null);
+    const chosen = exact ?? neutral ?? published[0];
     posts.push(
       toMeta(
         slug,
-        chosen.locale,
-        [...new Set(published.map((f) => f.locale))].sort(),
+        chosen.locale === null,
+        availableLocalesOf(published, chosen),
         chosen,
         chosen.body,
       ),
@@ -160,6 +171,17 @@ export async function listPosts(
   }
 
   return posts.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
+}
+
+/**
+ * Bahasa yang tersedia untuk satu post:
+ * - File netral → semua locale (konten tampil sama di ID & EN).
+ * - Selain itu → gabungan locale file per-bahasa; file netral pendamping juga
+ *   menutupi locale yang belum punya terjemahan.
+ */
+function availableLocalesOf(list: RawFile[], chosen: RawFile): Locale[] {
+  if (chosen.locale === null) return [...LOCALES];
+  return [...LOCALES].filter((l) => list.some((f) => f.locale === l || f.locale === null));
 }
 
 /** Ambil satu post lengkap (metadata + body). Null jika tidak ada / draft saat non-admin. */
@@ -173,16 +195,12 @@ export async function getPost(
   const list = files.filter((f) => f.slug === slug && (includeDrafts || !f.draft));
   if (list.length === 0) return null;
 
-  const exact = list.find((f) => f.locale === locale) ?? list[0];
+  const exact = list.find((f) => f.locale === locale);
+  const neutral = list.find((f) => f.locale === null);
+  const chosen = exact ?? neutral ?? list[0];
   return {
-    ...toMeta(
-      slug,
-      exact.locale,
-      [...new Set(list.map((f) => f.locale))].sort(),
-      exact,
-      exact.body,
-    ),
-    body: exact.body,
+    ...toMeta(slug, chosen.locale === null, availableLocalesOf(list, chosen), chosen, chosen.body),
+    body: chosen.body,
   };
 }
 

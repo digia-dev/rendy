@@ -89,6 +89,7 @@ export default async function BlogPostPage({
                 slug={post.slug}
                 locale={l}
                 availableLocales={post.availableLocales}
+                neutral={post.neutral}
               />
             }
           />

@@ -68,7 +68,6 @@ export function PostListSidebar({ locale, posts, activeSlug }: Props) {
             {filtered.map((p) => {
               const active = p.slug === activeSlug;
               const isDraft = p.draft;
-              const fallback = p.sourceLocale !== locale;
               return (
                 <li key={p.slug}>
                   <Link
@@ -88,18 +87,11 @@ export function PostListSidebar({ locale, posts, activeSlug }: Props) {
                     <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-neutral-500">
                       {p.excerpt}
                     </p>
-                    {isDraft || fallback ? (
+                    {isDraft ? (
                       <div className="mt-1 flex gap-1.5">
-                        {isDraft ? (
-                          <span className="rounded bg-[#febc2e]/30 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[#8a6100]">
-                            {t.draft[locale]}
-                          </span>
-                        ) : null}
-                        {fallback ? (
-                          <span className="rounded bg-black/[0.06] px-1.5 py-px text-[10px] font-medium uppercase tracking-wide text-neutral-500">
-                            {t.onlyIn[locale]} {p.sourceLocale === "id" ? "ID" : "EN"}
-                          </span>
-                        ) : null}
+                        <span className="rounded bg-[#febc2e]/30 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[#8a6100]">
+                          {t.draft[locale]}
+                        </span>
                       </div>
                     ) : null}
                   </Link>

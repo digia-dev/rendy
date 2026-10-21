@@ -9,12 +9,14 @@ interface Props {
   slug: string;
   locale: Locale;
   availableLocales: Locale[];
+  /** Post netral (konten sama di semua bahasa) — tombol ganti bahasa disembunyikan. */
+  neutral?: boolean;
 }
 
 /**
- * Aksi di header reader: ganti bahasa (jika tersedia) + salin tautan.
+ * Aksi di header reader: ganti bahasa (jika ada terjemahan berbeda) + salin tautan.
  */
-export function PostActions({ slug, locale, availableLocales }: Props) {
+export function PostActions({ slug, locale, availableLocales, neutral = false }: Props) {
   const t = ui.blog;
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -27,7 +29,8 @@ export function PostActions({ slug, locale, availableLocales }: Props) {
   );
 
   const other: Locale = locale === "id" ? "en" : "id";
-  const canSwitch = availableLocales.includes(other);
+  // Post netral: konten identik di semua bahasa — ganti bahasa tidak berguna.
+  const canSwitch = !neutral && availableLocales.includes(other);
 
   const onCopy = async () => {
     try {

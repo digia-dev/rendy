@@ -4,10 +4,11 @@ import { useState } from "react";
 import { LogOut, Plus, Save, Trash2 } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { ui, type Locale } from "@/data/site";
+import type { AdminLocale } from "@/lib/blog-admin";
 
 interface AdminPost {
   slug: string;
-  locale: Locale;
+  locale: AdminLocale;
   title: string;
   date: string;
   excerpt: string;
@@ -24,7 +25,8 @@ interface Props {
 
 interface FormState {
   slug: string;
-  locale: Locale;
+  /** "netral" = satu file tampil semua bahasa; "id"/"en" = override terjemahan. */
+  locale: AdminLocale;
   title: string;
   date: string;
   excerpt: string;
@@ -33,10 +35,11 @@ interface FormState {
   body: string;
 }
 
-function emptyForm(locale: Locale): FormState {
+function emptyForm(): FormState {
   return {
     slug: "",
-    locale,
+    // Default netral: satu post langsung tampil di ID & EN.
+    locale: "netral",
     title: "",
     date: new Date().toISOString().slice(0, 10),
     excerpt: "",
@@ -49,7 +52,7 @@ function emptyForm(locale: Locale): FormState {
 /** Gabungkan state form + posts; tampilkan login dialog bila belum sesi. */
 export function AdminGate({ locale, authed, initialPosts }: Props) {
   const [posts, setPosts] = useState<AdminPost[]>(initialPosts);
-  const [form, setForm] = useState<FormState>(() => emptyForm(locale));
+  const [form, setForm] = useState<FormState>(() => emptyForm());
   const [status, setStatus] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
@@ -161,7 +164,8 @@ export function AdminGate({ locale, authed, initialPosts }: Props) {
 
   const onDelete = async () => {
     if (!form.slug) return;
-    if (!confirm(`Hapus ${form.slug}.${form.locale}? Tindakan ini tidak bisa dibatalkan.`)) return;
+    const fileName = form.locale === "netral" ? `${form.slug}.mdx` : `${form.slug}.${form.locale}.mdx`;
+    if (!confirm(`Hapus ${fileName}? Tindakan ini tidak bisa dibatalkan.`)) return;
     setBusy(true);
     setStatus(null);
     try {
@@ -174,7 +178,7 @@ export function AdminGate({ locale, authed, initialPosts }: Props) {
         setStatus({ kind: "err", text: data.error ?? "Gagal menghapus." });
       } else {
         setStatus({ kind: "ok", text: "Post dihapus." });
-        setForm(emptyForm(locale));
+        setForm(emptyForm());
         await refreshList();
       }
     } catch {
@@ -221,7 +225,7 @@ export function AdminGate({ locale, authed, initialPosts }: Props) {
             <button
               type="button"
               onClick={() => {
-                setForm(emptyForm(locale));
+                setForm(emptyForm());
                 setStatus(null);
               }}
               className="flex w-full items-center justify-center gap-1.5 rounded-md bg-black px-2.5 py-1.5 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
@@ -253,7 +257,7 @@ export function AdminGate({ locale, authed, initialPosts }: Props) {
                             {p.title || p.slug}
                           </span>
                           <span className="shrink-0 rounded bg-black/[0.06] px-1 py-px text-[9.5px] font-bold uppercase text-neutral-500">
-                            {p.locale}
+                            {p.locale === "netral" ? "🌐" : p.locale}
                           </span>
                         </div>
                         <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-neutral-400">
@@ -295,18 +299,23 @@ export function AdminGate({ locale, authed, initialPosts }: Props) {
                     Bahasa
                   </span>
                   <div className="flex overflow-hidden rounded-md ring-1 ring-black/10">
-                    {(["id", "en"] as const).map((loc) => (
+                    {(["netral", "id", "en"] as const).map((loc) => (
                       <button
                         key={loc}
                         type="button"
                         onClick={() => setForm((f) => ({ ...f, locale: loc }))}
-                        className={`px-3 py-1.5 text-[12.5px] font-bold uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9] ${
+                        title={
+                          loc === "netral"
+                            ? "Satu file tampil di semua bahasa (disarankan)"
+                            : `Override terjemahan khusus ${loc.toUpperCase()}`
+                        }
+                        className={`px-2.5 py-1.5 text-[12.5px] font-bold uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9] ${
                           form.locale === loc
                             ? "bg-black text-white"
                             : "bg-white text-neutral-500 hover:bg-black/[0.04]"
                         }`}
                       >
-                        {loc}
+                        {loc === "netral" ? "🌐" : loc}
                       </button>
                     ))}
                   </div>
@@ -427,11 +436,13 @@ export function AdminGate({ locale, authed, initialPosts }: Props) {
               </div>
 
               <p className="text-[12px] leading-relaxed text-neutral-400">
-                Frontmatter otomatis dari form. Satu pasang file per post:{" "}
+                Frontmatter otomatis dari form. Default{" "}
                 <code className="rounded bg-black/[0.06] px-1 py-0.5 text-[11.5px]">
-                  {"<slug>.<locale>.mdx"}
+                  {"<slug>.mdx"}
                 </code>{" "}
-                di <code className="rounded bg-black/[0.06] px-1 py-0.5 text-[11.5px]">src/content/blog/</code>.
+                (netral — otomatis tampil di bahasa ID &amp; EN). Pilih ID/EN hanya untuk
+                override terjemahan khusus. File tersimpan di{" "}
+                <code className="rounded bg-black/[0.06] px-1 py-0.5 text-[11.5px]">src/content/blog/</code>.
               </p>
             </div>
           </div>

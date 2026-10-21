@@ -1,25 +1,32 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-session";
 import { readPostFiles } from "@/lib/blog";
-import { deletePost, savePost, validateDraft, type PostDraftInput } from "@/lib/blog-admin";
-import type { Locale } from "@/data/site";
+import {
+  deletePost,
+  savePost,
+  validateDraft,
+  type AdminLocale,
+  type PostDraftInput,
+} from "@/lib/blog-admin";
+import { routing } from "@/i18n/routing";
 
 export const runtime = "nodejs";
 
-const LOCALES: readonly Locale[] = ["id", "en"];
+const ADMIN_LOCALES: readonly AdminLocale[] = ["netral", ...routing.locales];
 
 function unauthorized() {
   return NextResponse.json({ ok: false, error: "Tidak terautentikasi." }, { status: 401 });
 }
 
-function isLocale(v: unknown): v is Locale {
-  return typeof v === "string" && (LOCALES as readonly string[]).includes(v);
+function isLocale(v: unknown): v is AdminLocale {
+  return typeof v === "string" && (ADMIN_LOCALES as readonly string[]).includes(v);
 }
 
 /**
  * GET /api/admin/posts?slug=&locale=&includeDrafts=1
  * Kembalikan isi post (termasuk draft) untuk editor.
  * Tanpa query → daftar ringkas semua file (termasuk draft).
+ * locale bisa "netral" (file `<slug>.mdx`) atau "id"/"en" (override per-bahasa).
  */
 export async function GET(req: Request) {
   if (!(await isAdminAuthenticated())) return unauthorized();
@@ -30,7 +37,9 @@ export async function GET(req: Request) {
   const files = await readPostFiles();
 
   if (slug && isLocale(locale)) {
-    const file = files.find((f) => f.slug === slug && f.locale === locale);
+    // "netral" → file.locale === null; selain itu file.locale sesuai.
+    const want = locale === "netral" ? null : locale;
+    const file = files.find((f) => f.slug === slug && f.locale === want);
     if (!file) return NextResponse.json({ ok: false, error: "Post tidak ditemukan." }, { status: 404 });
     return NextResponse.json({ ok: true, post: file });
   }
@@ -40,7 +49,7 @@ export async function GET(req: Request) {
     posts: files
       .map((f) => ({
         slug: f.slug,
-        locale: f.locale,
+        locale: (f.locale ?? "netral") as AdminLocale,
         title: f.title,
         date: f.date,
         excerpt: f.excerpt,
@@ -67,7 +76,7 @@ export async function POST(req: Request) {
 
   const draft: PostDraftInput = {
     slug: String(payload.slug ?? ""),
-    locale: (isLocale(payload.locale) ? payload.locale : "id") as Locale,
+    locale: isLocale(payload.locale) ? payload.locale : "netral",
     frontmatter: {
       title: String(payload.title ?? ""),
       date: String(payload.date ?? ""),

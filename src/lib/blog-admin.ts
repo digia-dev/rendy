@@ -4,9 +4,15 @@ import matter from "gray-matter";
 import { BLOG_DIR } from "./blog";
 import type { Locale } from "@/data/site";
 
+/**
+ * Bahasa file admin: "netral" = `<slug>.mdx` (tampil semua bahasa);
+ * "id"/"en" = override terjemahan per-bahasa (`<slug>.<locale>.mdx`).
+ */
+export type AdminLocale = Locale | "netral";
+
 export interface PostDraftInput {
   slug: string;
-  locale: Locale;
+  locale: AdminLocale;
   frontmatter: {
     title: string;
     date: string;
@@ -26,12 +32,12 @@ export interface SaveResult {
 }
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const LOCALES: readonly Locale[] = ["id", "en"];
+const ADMIN_LOCALES: readonly AdminLocale[] = ["netral", "id", "en"];
 const MAX_BODY_BYTES = 200_000;
 
 export function validateDraft(d: PostDraftInput): string | null {
   if (!SLUG_RE.test(d.slug)) return "Slug harus huruf kecil, angka, dan tanda hubung.";
-  if (!LOCALES.includes(d.locale)) return "Locale tidak dikenal.";
+  if (!ADMIN_LOCALES.includes(d.locale)) return "Locale tidak dikenal.";
   if (!d.frontmatter.title.trim()) return "Judul wajib diisi.";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d.frontmatter.date)) return "Format tanggal harus YYYY-MM-DD.";
   if (Buffer.byteLength(d.body, "utf8") > MAX_BODY_BYTES) return "Konten terlalu besar (maks 200KB).";
@@ -51,8 +57,13 @@ export function serializePost(d: PostDraftInput): string {
   return matter.stringify(d.body.replace(/\r\n/g, "\n").trimEnd() + "\n", fm);
 }
 
+/** Nama file untuk sepasang slug+locale ("netral" → `<slug>.mdx`). */
+export function postFileName(d: Pick<PostDraftInput, "slug" | "locale">): string {
+  return d.locale === "netral" ? `${d.slug}.mdx` : `${d.slug}.${d.locale}.mdx`;
+}
+
 export function postFilePath(d: Pick<PostDraftInput, "slug" | "locale">): string {
-  return path.join(BLOG_DIR, `${d.slug}.${d.locale}.mdx`);
+  return path.join(BLOG_DIR, postFileName(d));
 }
 
 function githubConfigured(): boolean {
@@ -154,10 +165,10 @@ async function deleteViaGitHub(relPath: string, message: string): Promise<SaveRe
  */
 export async function savePost(d: PostDraftInput): Promise<SaveResult> {
   const content = serializePost(d);
-  const relPath = `src/content/blog/${d.slug}.${d.locale}.mdx`;
+  const relPath = `src/content/blog/${postFileName(d)}`;
 
   if (githubConfigured()) {
-    return saveViaGitHub(relPath, content, `blog: simpan ${d.slug}.${d.locale}`);
+    return saveViaGitHub(relPath, content, `blog: simpan ${relPath.split("/").pop()}`);
   }
 
   await fs.mkdir(BLOG_DIR, { recursive: true });
@@ -167,10 +178,10 @@ export async function savePost(d: PostDraftInput): Promise<SaveResult> {
 
 /** Hapus post (lihat aturan backend sama seperti savePost). */
 export async function deletePost(d: Pick<PostDraftInput, "slug" | "locale">): Promise<SaveResult> {
-  const relPath = `src/content/blog/${d.slug}.${d.locale}.mdx`;
+  const relPath = `src/content/blog/${postFileName(d)}`;
 
   if (githubConfigured()) {
-    return deleteViaGitHub(relPath, `blog: hapus ${d.slug}.${d.locale}`);
+    return deleteViaGitHub(relPath, `blog: hapus ${relPath.split("/").pop()}`);
   }
 
   try {

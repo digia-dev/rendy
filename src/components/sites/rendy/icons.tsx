@@ -83,7 +83,7 @@ export function AppIcon({ id, className }: { id: AppIconId; className?: string }
  * diatur di `SectionDock`; komponen ini hanya me-`render` glyph-nya.
  * Home = inisial nama pakai font display.
  */
-export function NavGlyph({ id }: { id: "home" | "folder" | "sparkle" | "heart" | "calendar" | "phone" }) {
+export function NavGlyph({ id }: { id: "home" | "folder" | "sparkle" | "heart" | "calendar" | "phone" | "notes" }) {
   switch (id) {
     case "home":
       return (
@@ -121,6 +121,9 @@ export function NavGlyph({ id }: { id: "home" | "folder" | "sparkle" | "heart" |
       );
     case "calendar":
       // tema calendar dirender di SectionDock (kotak putih hari+tanggal).
+      return null;
+    case "notes":
+      // tema catatan dirender di SectionDock (kertas putih strip kuning).
       return null;
     case "phone":
       return (

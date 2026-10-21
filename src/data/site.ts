@@ -762,11 +762,16 @@ export const ui = {
     backToList: { id: "‹ Semua artikel", en: "‹ All posts" },
     minutes: { id: "mnt baca", en: "min read" },
     draft: { id: "Draf", en: "Draft" },
-    onlyIn: { id: "Hanya tersedia dalam", en: "Only available in" },
     switchLang: { id: "Baca versi", en: "Read in" },
     copyLink: { id: "Salin tautan", en: "Copy link" },
     copied: { id: "Tautan disalin", en: "Link copied" },
     rss: { id: "RSS", en: "RSS" },
+    dockLabel: { id: "Blog & Catatan", en: "Blog & Notes" },
+    adminDesktopOnly: {
+      id: "Blog admin hanya bisa dibuka di desktop. Silakan buka lewat komputer untuk menulis artikel.",
+      en: "The blog admin is desktop-only. Please open it on a computer to write posts.",
+    },
+    adminBackHome: { id: "Kembali ke situs", en: "Back to site" },
   },
 } as const;
 

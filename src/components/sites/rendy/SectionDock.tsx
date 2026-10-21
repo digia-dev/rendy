@@ -9,11 +9,13 @@ import { createPortal } from "react-dom";
 
 const items: {
   key: string;
-  glyph: "home" | "folder" | "sparkle" | "heart" | "calendar" | "phone";
+  glyph: "home" | "folder" | "sparkle" | "heart" | "calendar" | "phone" | "notes";
   href: string;
   label: { id: string; en: string };
   /** Warna ikon (gradients untuk aksen, netral untuk home & calendar). */
   iconCls: string;
+  /** Hanya tampil di dock mobile (bawah) — desktop punya MenuBar. */
+  mobileOnly?: boolean;
 }[] = [
   {
     key: "home",
@@ -42,6 +44,14 @@ const items: {
     href: ui.sectionNav.about.href,
     label: ui.sectionNav.about.label,
     iconCls: "text-white bg-gradient-to-b from-[#FF7A93] to-[#F92D50]",
+  },
+  {
+    key: "blog",
+    glyph: "notes",
+    href: "/blog",
+    label: ui.blog.dockLabel,
+    iconCls: "text-neutral-700 bg-white",
+    mobileOnly: true,
   },
   {
     key: "booking",
@@ -120,6 +130,10 @@ export function SectionDock({
       ? "pointer-events-none sticky top-12 z-[60] flex justify-center px-4 py-3 hidden md:flex"
       : "pointer-events-none sticky bottom-4 z-[60] flex justify-center px-4 pb-2 md:hidden";
 
+  // Mode top (dock desktop) menyembunyikan item khusus mobile (mis. Blog —
+  // desktop sudah punya dropdown Blog di MenuBar).
+  const visibleItems = mode === "top" ? items.filter((it) => !it.mobileOnly) : items;
+
   return (
     <div className={wrapCls}>
       {/* Bar kaca dock */}
@@ -127,8 +141,9 @@ export function SectionDock({
         ref={dockRef}
         className="simple-glass pointer-events-auto flex items-end gap-2 rounded-2xl p-2"
       >
-        {items.map((item, i) => {
+        {visibleItems.map((item, i) => {
           const isCalendar = item.glyph === "calendar";
+          const isNotes = item.glyph === "notes";
           const scaleCls =
             "dock-icon relative inline-flex cursor-pointer items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 
@@ -169,11 +184,24 @@ export function SectionDock({
                   title={item.label[locale]}
                   className={`${scaleCls} h-10 w-10 rounded-[20%] md:h-12 md:w-12 md:rounded-[24%]`}
                 >
-                  <span
-                    className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[20%] shadow-[0_2px_6px_rgba(0,0,0,0.25)] ${item.iconCls} md:rounded-[24%]`}
-                  >
-                    <NavGlyph id={item.glyph} />
-                  </span>
+                  {isNotes ? (
+                    /* Ikon Catatan ala Notes.app macOS: kertas putih, strip
+                       kuning di atas, beberapa baris teks abu di bawah. */
+                    <span className="relative flex h-full w-full flex-col overflow-hidden rounded-[20%] bg-white shadow-[0_2px_6px_rgba(0,0,0,0.25)] ring-1 ring-black/10 md:rounded-[24%]">
+                      <span className="h-[3px] w-full shrink-0 bg-[#ffcc00]" aria-hidden="true" />
+                      <span className="flex min-h-0 flex-1 flex-col justify-center gap-[3px] px-[18%] pb-[8%]" aria-hidden="true">
+                        <span className="h-[2px] w-full rounded-full bg-neutral-300" />
+                        <span className="h-[2px] w-full rounded-full bg-neutral-300" />
+                        <span className="h-[2px] w-2/3 rounded-full bg-neutral-300" />
+                      </span>
+                    </span>
+                  ) : (
+                    <span
+                      className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[20%] shadow-[0_2px_6px_rgba(0,0,0,0.25)] ${item.iconCls} md:rounded-[24%]`}
+                    >
+                      <NavGlyph id={item.glyph} />
+                    </span>
+                  )}
                   <span className="active-indicator" aria-hidden="true" />
                 </Link>
               )}
