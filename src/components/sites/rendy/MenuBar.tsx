@@ -110,15 +110,19 @@ export function MenuBar({ locale, role, ariaRoleLabel, blogPosts = [] }: Props) 
             {profile.initials}
           </a>
 
-          {/* Nama + peran (desktop) */}
-          <span className="ml-1 hidden font-semibold text-neutral-800 sm:inline">{profile.name}</span>
+          {/* Nama + peran — nama selalu tampil (mobile: satu-satunya teks di
+              header selain logo); peran hanya desktop besar */}
+          <span className="ml-1 font-semibold text-neutral-800">{profile.name}</span>
           <span className="ml-2 hidden font-medium text-neutral-500 lg:inline">{role[locale]}</span>
           <span className="sr-only"> ({ariaRoleLabel})</span>
 
-          {/* Menu item + dropdown ala macOS */}
-          {menus.map((m) => (
-            <MenuDropMenu key={m.key} label={m.label} items={m.items} />
-          ))}
+          {/* Menu item + dropdown ala macOS — hanya desktop; di mobile
+              navigasi lewat dock bawah (ikon Beranda/Blog/Kalender/dll.) */}
+          <span className="hidden items-center gap-1 md:flex">
+            {menus.map((m) => (
+              <MenuDropMenu key={m.key} label={m.label} items={m.items} />
+            ))}
+          </span>
         </nav>
 
         <div className="flex shrink-0 items-center gap-3">
