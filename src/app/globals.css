@@ -327,11 +327,141 @@
   }
 }
 
+/* ------------------------------------------------------------- sheet slide-up
+   Bottom sheet booking — masuk dari bawah (mobile), fade+scale (desktop). */
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sheet-enter {
+  animation: sheet-slide-up 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (min-width: 768px) {
+  .sheet-enter {
+    animation: sheet-fade-in 0.24s ease-out;
+  }
+}
+.backdrop-enter {
+  animation: sheet-fade-in 0.22s ease-out;
+}
+
+/* ------------------------------------------------------------- wheel picker
+   Pilih waktu gaya iOS: kolom jam & menit ini scrolled, item tengah terpilih. */
+.sheet-wheel {
+  position: relative;
+  height: 160px;
+}
+.sheet-wheel-mask {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 1) 35%,
+    rgba(0, 0, 0, 1) 65%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 1) 35%,
+    rgba(0, 0, 0, 1) 65%,
+    transparent 100%
+  );
+}
+.sheet-wheel-row {
+  height: 40px;
+  scroll-snap-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: #18181b;
+  transition: opacity 0.15s, color 0.15s;
+}
+.sheet-wheel-row.is-inactive {
+  opacity: 0.35;
+  color: #8a8a90;
+  font-weight: 400;
+}
+.sheet-wheel-row.is-selected {
+  color: #0069d9;
+  font-weight: 700;
+}
+.sheet-wheel-highlight {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 40px;
+  transform: translateY(-50%);
+  background: rgba(0, 105, 217, 0.08);
+  border-radius: 12px;
+  pointer-events: none;
+  border: 1px solid rgba(0, 105, 217, 0.16);
+}
+
+/* ------------------------------------------------------------- macOS dock
+   Rekreasi dock bar kaca ala "QuantumOS" (Hamza). `simple-glass` = bar dock,
+   `.dock-icon` = magnification + lift saat pointer mendekat, `.active-indicator`
+   = titik aktif di bawah icon. */
+.simple-glass {
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.dock-icon {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1.5), z-index 0s step;
+  will-change: transform;
+  transform-origin: bottom center;
+}
+
+.active-indicator {
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background-color: rgba(60, 60, 70, 0.85);
+  border-radius: 9999px;
+  box-shadow: 0 0 5px rgba(90, 90, 100, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dock-icon:hover .active-indicator {
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
   .marquee-track {
     animation: none;
+  }
+  .sheet-enter,
+  .backdrop-enter {
+    animation: none;
+  }
+  .dock-icon {
+    transition: none;
   }
 }

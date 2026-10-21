@@ -8,6 +8,7 @@ import { CalendarCard } from "./widgets/CalendarCard";
 import { ClockCard } from "./widgets/ClockCard";
 import { MusicCard, PhotoCard } from "./widgets/StaticCards";
 import { WeatherCard } from "./widgets/WeatherCard";
+import { readGalleryDir } from "@/lib/gallery";
 
 interface Props {
   locale: Locale;
@@ -30,10 +31,12 @@ function FolderLink({ href, label, aria }: { href: string; label: string; aria: 
 }
 
 export async function HeroDesktop({ locale, todayISO }: Props) {
+  // Baca galeri dari folder public/sites/rendy/gallery (otomatis, tanpa daftar).
+  const gallery = await readGalleryDir();
   return (
     <section
       id="top"
-      className="relative z-0 flex min-h-[100svh] w-full flex-col bg-white md:sticky md:top-0 md:h-[100svh]"
+      className="relative z-0 flex min-h-[100svh] w-full flex-col bg-white pt-8 md:sticky md:top-0 md:h-[100svh]"
     >
       <MenuBar locale={locale} role={profile.role} ariaRoleLabel={ui.menuRole[locale]} />
       {/* A2 — tekstur radial dot halus di latar hero */}
@@ -67,7 +70,7 @@ export async function HeroDesktop({ locale, todayISO }: Props) {
         </Draggable>
 
         <Draggable id="photo" initial={{ top: 404, left: 24 }}>
-          <PhotoCard alt={`${profile.name} — ${profile.role[locale]}`} />
+          <PhotoCard locale={locale} alt={`${profile.name} — ${profile.role[locale]}`} photos={gallery} />
         </Draggable>
 
         <nav
@@ -84,14 +87,6 @@ export async function HeroDesktop({ locale, todayISO }: Props) {
         {/* Hero heading & subtitle — terpusat sempurna via flex (sama seperti sumber) */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center">
           <div className="max-w-[760px]">
-            {/* Badge status (E3) */}
-            <span className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 py-1 pl-2 pr-3 text-[11px] font-semibold text-neutral-600 shadow-sm backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#34c759] opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#34c759]" />
-              </span>
-              {hero.heroStatus[locale]}
-            </span>
             <h1 className="mt-4 text-[48px] font-extrabold leading-[1.05] tracking-[-1.2px] text-black">
               {hero.line1[locale]}
               <br />
@@ -146,14 +141,11 @@ export async function HeroDesktop({ locale, todayISO }: Props) {
             hint={widgets.calendar.mobileHint}
             ariaLabel={ui.bookingTitle[locale]}
           />
-          <div className="h-[150px] w-[150px] overflow-hidden rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- rasio foto CV dipertahankan */}
-            <img
-              src={widgets.photo.src}
-              alt={`${profile.name} — ${profile.role[locale]}`}
-              className="h-full w-full object-cover"
-            />
-          </div>
+          <PhotoCard
+            locale={locale}
+            alt={`${profile.name} — ${profile.role[locale]}`}
+            photos={gallery}
+          />
         </div>
 
         <nav className="grid grid-cols-4 gap-3" aria-label={ui.navAria[locale]}>

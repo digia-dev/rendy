@@ -1,87 +1,50 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play } from "lucide-react";
-import { widgets } from "@/data/site";
+import { useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
+import { Play, Pause } from "lucide-react";
+import { widgets, type Locale } from "@/data/site";
+import { getMusicStore } from "./music-store";
+import { PhotoGallery } from "./PhotoGallery";
 
-function fmt(sec: number) {
-  if (!isFinite(sec) || sec < 0) return "0:00";
-  const s = Math.floor(sec % 60);
-  const m = Math.floor(sec / 60);
-  return `${m}:${String(s).padStart(2, "0")}`;
+function formatTime(s: number): string {
+  if (!s || Number.isNaN(s) || s < 0) return "0:00";
+  const t = Math.floor(s);
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
 }
 
+import type { GalleryItem } from "@/lib/gallery";
+
 /**
- * Kartu musik — pemutar audio lokal penuh: play/pause file MP3, progress bar
- * (seekable), dan rentang waktu (posisi / durasi) yang diambil dari metadata
- * berkas. Cover album asli di kiri (OQ-4).
+ * MusicCard desktop (full widget).
+ * Reads state from and controls the shared singleton store.
+ * Hidden on mobile via max-md:hidden; FloatingMusic handles mobile.
  */
+
 export function MusicCard() {
-  const { track, artist, cover, audioSrc } = widgets.music;
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [current, setCurrent] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [ready, setReady] = useState(false);
+  const store = getMusicStore();
+  const state = useSyncExternalStore(
+    store.subscribe,
+    () => store.getState(),
+    () => store.getState(),
+  );
 
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    const sync = () => {
-      setDuration(a.duration || 0);
-      setReady(true);
-    };
-    const onTime = () => setCurrent(a.currentTime);
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onEnd = () => {
-      setPlaying(false);
-      setCurrent(0);
-    };
-    // Seize duration immediately in case loadedmetadata sudah lebih dulu, lalu ikat
-    // event juga untuk kasus metadata dimuat kemudian.
-    if (a.readyState >= 1 && isFinite(a.duration) && a.duration) sync();
-    a.addEventListener("loadedmetadata", sync);
-    a.addEventListener("durationchange", sync);
-    a.addEventListener("canplay", sync);
-    a.addEventListener("timeupdate", onTime);
-    a.addEventListener("play", onPlay);
-    a.addEventListener("pause", onPause);
-    a.addEventListener("ended", onEnd);
-    return () => {
-      a.removeEventListener("loadedmetadata", sync);
-      a.removeEventListener("durationchange", sync);
-      a.removeEventListener("canplay", sync);
-      a.removeEventListener("timeupdate", onTime);
-      a.removeEventListener("play", onPlay);
-      a.removeEventListener("pause", onPause);
-      a.removeEventListener("ended", onEnd);
-    };
-  }, []);
+  const { track, artist, cover } = widgets.music;
 
-  const toggle = useCallback(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    if (a.paused) a.play().catch(() => {});
-    else a.pause();
-  }, []);
+  const toggle = () => {
+    store.toggle();
+  };
 
-  const seek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const a = audioRef.current;
-    const v = Number(e.target.value);
-    if (a) {
-      a.currentTime = v;
-      setCurrent(v);
-    }
-  }, []);
+  const seek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value);
+    store.seek(val);
+  };
 
-  const pct = duration > 0 ? (current / duration) * 100 : 0;
+  const pct = state.duration > 0 ? (state.current / state.duration) * 100 : 0;
 
   return (
     <div className="glass-card flex h-[150px] w-[320px] flex-col p-4 max-md:hidden">
-      <audio ref={audioRef} src={audioSrc} preload="auto" />
       <div className="flex items-start gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element -- cover album asli */}
         <img
           src={cover}
           alt={`${artist} — ${track}`}
@@ -94,17 +57,17 @@ export function MusicCard() {
             <button
               type="button"
               onClick={toggle}
-              aria-label={playing ? "Pause" : "Play"}
+              aria-label={state.playing ? "Pause" : "Play"}
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-white shadow-[0_2px_6px_rgba(0,0,0,0.25)] transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
             >
-              {playing ? <Pause className="h-3.5 w-3.5 fill-white" /> : <Play className="h-3.5 w-3.5 fill-white" />}
+              {state.playing ? <Pause className="h-3.5 w-3.5 fill-white" /> : <Play className="h-3.5 w-3.5 fill-white" />}
             </button>
             <input
               type="range"
               min={0}
-              max={duration || 0}
+              max={state.duration || 0}
               step="0.1"
-              value={current}
+              value={state.current}
               onChange={seek}
               aria-label="Seek"
               className="music-range h-[3px] w-full min-w-0 cursor-pointer appearance-none rounded-full"
@@ -116,19 +79,92 @@ export function MusicCard() {
         </div>
       </div>
       <div className="mt-auto flex items-center justify-between text-[11px] tabular-nums text-neutral-500">
-        <span>{fmt(current)}</span>
-        <span>-{fmt(ready ? duration : 0)}</span>
+        <span>{formatTime(state.current)}</span>
+        <span>-{formatTime(state.duration)}</span>
       </div>
     </div>
   );
 }
 
-/** Kartu foto (sumber: selfie 150×150) — foto profil dari CV. */
-export function PhotoCard({ alt }: { alt: string }) {
+/**
+ * Kartu foto — klik membuka galeri "Photos" (foto & video).
+ * `photos` dibaca otomatis dari `public/sites/rendy/gallery/` di server
+ * (via `readGalleryDir()`), sehingga cukup taruh file — tanpa daftar di site.ts.
+ */
+export function PhotoCard({
+  locale,
+  alt,
+  photos,
+}: {
+  locale: Locale;
+  alt: string;
+  photos: ReadonlyArray<GalleryItem>;
+}) {
+  // Alt default bila item tak punya; foto pertama memakai `alt` profil.
+  const items = photos.map((item, i) => ({
+    type: item.type,
+    src: item.src,
+    poster: item.poster,
+    alt: i === 0 ? alt : item.type === "video" ? `Video ${i + 1}` : `Foto ${i + 1}`,
+  }));
+  const [open, setOpen] = useState(false);
+  const [index, setIndex] = useState(0);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  // Widget memilih satu item (foto/video) secara acak setiap render (client)
+  // agar tampilan hero selalu bervariasi.
+  const shuffle = items.length > 0 ? index % items.length : 0;
+
+  if (items.length === 0) return null;
+
+  const current = items[shuffle];
+
   return (
-    <div className="h-[150px] w-[150px] overflow-hidden rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] max-md:hidden">
-      {/* eslint-disable-next-line @next/next/no-img-element -- rasio foto CV dipertahankan apa adanya */}
-      <img src={widgets.photo.src} alt={alt} className="h-full w-full object-cover" />
-    </div>
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={() => {
+          setIndex(Math.floor(Math.random() * items.length));
+          setOpen(true);
+        }}
+        aria-label={alt}
+        aria-haspopup="dialog"
+        className="h-[150px] w-[150px] cursor-pointer overflow-hidden rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-transform hover:scale-[1.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
+      >
+        {current.type === "video" ? (
+          /* eslint-disable-next-line jsx-a11y/media-has-caption */
+          <video
+            src={current.src}
+            poster={current.poster}
+            muted
+            playsInline
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={current.src}
+            alt={current.alt}
+            className="h-full w-full object-cover"
+            draggable={false}
+          />
+        )}
+      </button>
+      {open ? createPortal(
+        <PhotoGallery
+          locale={locale}
+          photos={items}
+          currentIndex={shuffle}
+          onNavigate={setIndex}
+          onClose={() => setOpen(false)}
+          triggerRef={btnRef}
+          prevLabel="Previous photo"
+          nextLabel="Next photo"
+          closeLabel="Close gallery"
+        />,
+        document.body,
+      ) : null}
+    </>
   );
 }

@@ -27,13 +27,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const now = new Date();
   const todayISO = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(now);
   const dayOfMonth = Number(new Intl.DateTimeFormat("en-GB", { timeZone: tz, day: "numeric" }).format(now));
-  const weekdayShort = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(now);
+  const weekdayShort = new Intl.DateTimeFormat(l === "id" ? "id-ID" : "en-US", { timeZone: tz, weekday: "short" }).format(now);
 
   return (
     <main>
       <HeroDesktop locale={l} todayISO={todayISO} />
       {/* Dock navigasi desktop — sticky di atas (perilaku asli md+) */}
-      <SectionDock mode="top" locale={l} dayOfMonth={dayOfMonth} weekdayShort={weekdayShort} />
+      <SectionDock mode="top" locale={l} dayOfMonth={dayOfMonth} weekdayShort={weekdayShort} todayISO={todayISO} />
       <AchievementsGrid locale={l} />
       <CertificatesMarquee locale={l} />
       <PillarStack locale={l} />
@@ -43,7 +43,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       {/* C1 — FAQ section, diletakkan di bawah #about */}
       <FaqSection locale={l} />
       {/* Dock navigasi mobile — sticky di bawah, naik saat footer */}
-      <SectionDock mode="bottom" locale={l} dayOfMonth={dayOfMonth} weekdayShort={weekdayShort} />
+      <SectionDock mode="bottom" locale={l} dayOfMonth={dayOfMonth} weekdayShort={weekdayShort} todayISO={todayISO} />
       {/* Floating music (mode mobile) */}
       <div className="md:hidden">
         <FloatingMusicMobile />

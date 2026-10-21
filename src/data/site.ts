@@ -116,39 +116,46 @@ export const achievements: Achievement[] = [
 
 export interface Certificate {
   name: L10n;
-  meta: L10n;
+  period: L10n;
+  company: L10n;
   color: string;
 }
 
 export const certificates: Certificate[] = [
   {
     name: { id: "Sales JAWARA", en: "Sales JAWARA" },
-    meta: { id: "07/2022 – sekarang · Home Credit Indonesia", en: "07/2022 – present · Home Credit Indonesia" },
+    period: { id: "07/2022 – sekarang", en: "07/2022 – present" },
+    company: { id: "Home Credit Indonesia", en: "Home Credit Indonesia" },
     color: "#edb53c",
   },
   {
     name: { id: "Strategi Internet Marketing", en: "Internet Marketing Strategy" },
-    meta: { id: "04/2021 · efektif & terukur", en: "04/2021 · effective & measurable" },
+    period: { id: "04/2021", en: "04/2021" },
+    company: { id: "efektif & terukur", en: "effective & measurable" },
     color: "#4c9fe8",
   },
   {
     name: { id: "Brand Innovation Award", en: "Brand Innovation Award" },
-    meta: { id: "08/2018 · PT Kimia Farma Apotek", en: "08/2018 · PT Kimia Farma Apotek" },
+    period: { id: "08/2018", en: "08/2018" },
+    company: { id: "PT Kimia Farma Apotek", en: "PT Kimia Farma Apotek" },
     color: "#e8524f",
   },
   {
     name: { id: "Kimia Farma Innovation Awards", en: "Kimia Farma Innovation Awards" },
-    meta: { id: "2018 · peserta", en: "2018 · participant" },
+    period: { id: "2018", en: "2018" },
+    company: { id: "peserta", en: "participant" },
     color: "#8a5cf0",
   },
   {
     name: { id: "Siswa Berprestasi Brebes", en: "Brebes Outstanding Student" },
-    meta: { id: "2012 · Dinas Pendidikan Kab. Brebes", en: "2012 · Brebes Education Office" },
+    period: { id: "2012", en: "2012" },
+    company: { id: "Dinas Pendidikan Kab. Brebes", en: "Brebes Education Office" },
     color: "#7fae8c",
   },
   {
     name: { id: "SMK Farmasi YPIB Brebes", en: "YPIB Brebes Pharmacy Vocational School" },
-    meta: { id: "2014 · lulus program farmasi", en: "2014 · pharmacy program graduate" },
+    period: { id: "2014", en: "2014" },
+    company: { id: "lulus program farmasi", en: "pharmacy program graduate" },
     color: "#4c9fe8",
   },
 ];
@@ -389,7 +396,7 @@ export const workPages: Record<string, WorkPage> = {
   "home-credit": {
     label: { id: "Studi kasus", en: "Case study" },
     title: { id: "Sales Associate di Home Credit Indonesia", en: "Sales Associate at Home Credit Indonesia" },
-    subtitle: { id: "03/2022 – Present · pembiayaan konsumen", en: "03/2022 – Present · consumer financing" },
+    subtitle: { id: "03/2022 – Present, pembiayaan konsumen", en: "03/2022 – Present, consumer financing" },
     body: [
       {
         id: "Setiap hari saya menawarkan pembiayaan kredit ke nasabah dan perusahaan, lalu bernegosiasi sampai menemukan titik kesepakatan win-win dengan angsuran yang tepat.",
@@ -409,7 +416,7 @@ export const workPages: Record<string, WorkPage> = {
   suryapran: {
     label: { id: "Studi kasus", en: "Case study" },
     title: { id: "Warehouse Supervisor di PT Suryaprana Nutrisindo", en: "Warehouse Supervisor at PT Suryaprana Nutrisindo" },
-    subtitle: { id: "07/2020 – 03/2021 · distribusi & ritel (Nutrimax)", en: "07/2020 – 03/2021 · distribution & retail (Nutrimax)" },
+    subtitle: { id: "07/2020 – 03/2021 ,, distribusi & ritel (Nutrimax)", en: "07/2020 – 03/2021 ,, distribution & retail (Nutrimax)" },
     body: [
       {
         id: "Selain mengawasi barang keluar-masuk gudang dan memeriksa barang expired, saya mengelola social media perusahaan untuk meningkatkan strategi online.",
@@ -429,7 +436,7 @@ export const workPages: Record<string, WorkPage> = {
   "kimia-farma": {
     label: { id: "Studi kasus", en: "Case study" },
     title: { id: "Pharmacist's Assistant di PT Kimia Farma Apotek", en: "Pharmacist's Assistant at PT Kimia Farma Apotek" },
-    subtitle: { id: "12/2014 – 06/2020 · farmasi ritel", en: "12/2014 – 06/2020 · retail pharmacy" },
+    subtitle: { id: "12/2014 – 06/2020 ,, farmasi ritel", en: "12/2014 – 06/2020 ,, retail pharmacy" },
     body: [
       {
         id: "Saya memberikan layanan terbaik untuk pasien dan solusi atas masalah kesehatan, sekaligus membuat laporan penjualan, menghitung HPP, dan mempromosikan produk.",
@@ -457,14 +464,14 @@ export const workPages: Record<string, WorkPage> = {
       },
     ],
     bullets: certificates.map((c) => ({
-      id: `${c.name.id} — ${c.meta.id}`,
-      en: `${c.name.en} — ${c.meta.en}`,
+      id: `${c.name.id} — ${c.company.id}`,
+      en: `${c.name.en} — ${c.company.en}`,
     })),
   },
   pendidikan: {
     label: { id: "Pendidikan", en: "Education" },
     title: { id: "SMK Farmasi YPIB Brebes", en: "YPIB Brebes Pharmacy Vocational School" },
-    subtitle: { id: "Program Farmasi · lulus 2014", en: "Pharmacy program · graduated 2014" },
+    subtitle: { id: "Program Farmasi, lulus 2014", en: "Pharmacy program, graduated 2014" },
     body: [
       {
         id: "Sekolah menengah kejuruan dengan kompetensi keahlian farmasi. Semasa sekolah saya memenangkan kompetisi tim cerdas pada kegiatan kemah pramuka khusus siswa berprestasi di wilayah Brebes.",
@@ -569,7 +576,21 @@ export const widgets = {
     audioSrc: "/sites/rendy/audio/melompat-lebih-tinggi.mp3",
     streamingUrl: "https://music.youtube.com/search?q=Sheila+On+7+Melompat+Lebih+Tinggi",
   },
-  photo: { src: "/sites/rendy/foto-rendy.png" },
+  photo: {
+    /**
+     * Galeri "Photos" Rendy — foto dan video yang ditampilkan di hero.
+     * `type: "image"` untuk foto, `type: "video"` untuk video (auto-play saat
+     * dibuka). Tambahkan berkas ke `public/sites/rendy/gallery/` lalu
+     * daftarkan item di sini; widget desktop memilih acak dari daftar ini.
+     * `defaultSrc` dipakai untuk thumbnail widget & placeholder mobile.
+     */
+    defaultSrc: "/sites/rendy/foto-rendy.png",
+    gallery: [
+      { type: "image" as const, src: "/sites/rendy/foto-rendy.png" },
+      // Contoh video — hapus komentar & ganti path saat video siap:
+      // { type: "video" as const, src: "/sites/rendy/gallery/rendy-1.mp4", poster: "/sites/rendy/gallery/rendy-1.jpg" },
+    ],
+  },
 } as const;
 
 /* -------------------------------------------------------------------- ui */
@@ -694,7 +715,7 @@ export const ui = {
     linkedinLabel: { id: "LinkedIn", en: "LinkedIn" },
     websiteLabel: { id: "Website Rapid Network", en: "Rapid Network website" },
     rights: { id: "© 2026 Rendy Giantara", en: "© 2026 Rendy Giantara" },
-    badgesCaption: { id: "Marketing & Product · Rapid Network", en: "Marketing & Product · Rapid Network" },
+    badgesCaption: { id: "Marketing & Product, Rapid Network", en: "Marketing & Product, Rapid Network" },
   },
   footerLang: { id: "Bahasa", en: "Language" },
   clockAria: { id: "Jam analog", en: "Analog clock" },

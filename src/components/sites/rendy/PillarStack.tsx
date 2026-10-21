@@ -25,7 +25,7 @@ export function PillarStack({ locale }: { locale: Locale }) {
           <div className="bg-[#f6f7f9] px-6 pb-16 pt-8 md:min-h-[730px] md:px-10 md:pt-12">
             <div className="mx-auto grid max-w-[1060px] items-start gap-8 md:grid-cols-2 md:gap-16">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">
+                <p className="text-[11px] font-medium text-neutral-500 tracking-tight">
                   {ui.superpowerLabel[locale]} {ui.noSign}
                   {p.index}
                 </p>

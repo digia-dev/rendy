@@ -1,65 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { Play } from "lucide-react";
 import { widgets } from "@/data/site";
+import { getMusicStore } from "./music-store";
 
 /**
- * Floating music button ala macOS (mode mobile saja).
- * Bisa digeser (drag & drop) ke posisi mana pun di layar; menyatu dengan
- * `position: fixed` dan `left/top`. Ketukan (tanpa geser) = play/pause.
- * Mencoba autoplay otomatis; jika browser memblokir, tombol siap diputar manual.
+ * Floating music button mobile — tersinkron dengan MusicCard desktop melalui
+ * singleton store (satu elemen audio, dua UI). Tidak ada autoplay.
  */
 export function FloatingMusicMobile() {
-  const { cover, track, artist, audioSrc } = widgets.music;
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const store = getMusicStore();
+  const state = useSyncExternalStore(store.subscribe, () => store.getState(), () => store.getState());
+
+  const { cover, track, artist } = widgets.music;
   const btnRef = useRef<HTMLButtonElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null); // null = default right-bottom
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const drag = useRef({ sx: 0, sy: 0, ox: 0, oy: 0, moved: false });
 
-  // Coba play otomatis saat mount (mobile).
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    const tryPlay = () => {
-      a.play()
-        .then(() => setPlaying(true))
-        .catch(() => {
-          /* autoplay diblokir */
-        });
-    };
-    const onCanPlay = () => tryPlay();
-    if (a.readyState >= 1) tryPlay();
-    else a.addEventListener("canplay", onCanPlay);
-    const onEnd = () => {
-      a.currentTime = 0;
-      a.play().catch(() => {});
-    };
-    a.addEventListener("ended", onEnd);
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    a.addEventListener("play", onPlay);
-    a.addEventListener("pause", onPause);
-    return () => {
-      a.removeEventListener("canplay", onCanPlay);
-      a.removeEventListener("ended", onEnd);
-      a.removeEventListener("play", onPlay);
-      a.removeEventListener("pause", onPause);
-    };
-  }, []);
+  const toggle = () => store.toggle();
 
-  const toggle = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    if (a.paused) a.play().catch(() => {});
-    else a.pause();
-  };
-
-  // Tekan: mulai kemungkinan drag.
   const onPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    // posisi awal drag diambil dari posisi tombol saat ini (fixed left/top)
     const r = btnRef.current?.getBoundingClientRect();
     const base = pos ?? { x: r ? r.left : window.innerWidth - 200, y: r ? r.top : window.innerHeight - 200 };
     drag.current = { sx: e.clientX, sy: e.clientY, ox: base.x, oy: base.y, moved: false };
@@ -73,22 +35,15 @@ export function FloatingMusicMobile() {
       const h = btnRef.current?.offsetHeight ?? 56;
       const nx = Math.min(window.innerWidth - w - 8, Math.max(8, drag.current.ox + dx));
       let ny = Math.min(window.innerHeight - h - 8, Math.max(8, drag.current.oy + dy));
-
-      // no-fly zone: area deck navigasi mobile (bawah-tengah) — musik tidak boleh
-      // menutupi deck. Jika kandidat posisi menabrak zona itu, dorong ke atas zona.
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const deckW = Math.min(340, vw - 20); // perkiraan lebar deck
-      const deckTop = vh - 118; // perkiraan posisi atas deck (bottom-4 + tinggi)
+      const deckW = Math.min(340, vw - 20);
+      const deckTop = vh - 118;
       const zoneLeft = vw / 2 - deckW / 2;
       const zoneRight = vw / 2 + deckW / 2;
       const overlapX = nx < zoneRight && nx + w > zoneLeft;
       const overlapY = ny < vh - 8 && ny + h > deckTop;
-      if (overlapX && overlapY) {
-        // taruh tepat di atas deck
-        ny = deckTop - h - 8;
-      }
-
+      if (overlapX && overlapY) ny = deckTop - h - 8;
       setPos({ x: nx, y: ny });
     };
     const up = () => {
@@ -101,7 +56,6 @@ export function FloatingMusicMobile() {
     window.addEventListener("pointercancel", up);
   };
 
-  // Saat klik muncul benar-benar (tanpa drag), toggle play/pause.
   const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (drag.current.moved) {
       e.preventDefault();
@@ -116,49 +70,43 @@ export function FloatingMusicMobile() {
     ? { left: pos.x, top: pos.y }
     : { right: 12, top: 64, left: undefined, bottom: undefined };
 
+  const playing = state.playing;
+
   return (
-    <>
-      <audio ref={audioRef} src={audioSrc} loop preload="auto" />
-      <button
-        ref={btnRef}
-        type="button"
-        onClick={onClick}
-        onPointerDown={onPointerDown}
-        aria-label={playing ? "Pause music" : "Play music"}
-        aria-pressed={playing}
-        className="fixed z-[65] flex touch-none select-none items-center gap-2 rounded-full border border-black/10 bg-white/85 py-1 pl-1 pr-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-md active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
-        style={style}
-      >
-        {/* cover */}
-        <span className="relative h-9 w-9 overflow-hidden rounded-full">
-          {/* eslint-disable-next-line @next/next/no-img-element -- cover album */}
-          <img src={cover} alt="" className="h-full w-full object-cover" draggable={false} />
-          {!playing ? (
-            <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 text-white">
-              <Play className="h-3.5 w-3.5 fill-white" />
-            </span>
-          ) : null}
-        </span>
-
-        {/* equalizer animasi saat diputar */}
-        <span className="flex h-4 items-end gap-[3px]" aria-hidden="true">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="w-[3px] rounded-full bg-[#0069d9]"
-              style={{
-                height: playing ? "100%" : "40%",
-                animation: playing ? `eq-bounce 0.9s ease-in-out ${i * 0.18}s infinite alternate` : "none",
-              }}
-            />
-          ))}
-        </span>
-
-        <span className="flex flex-col items-start">
-          <span className="max-w-[110px] truncate text-[11px] font-bold leading-tight text-black">{track}</span>
-          <span className="max-w-[110px] truncate text-[9px] leading-tight text-neutral-500">{artist}</span>
-        </span>
-      </button>
-    </>
+    <button
+      ref={btnRef}
+      type="button"
+      onClick={onClick}
+      onPointerDown={onPointerDown}
+      aria-label={playing ? "Pause music" : "Play music"}
+      aria-pressed={playing}
+      className="fixed z-[65] flex touch-none select-none items-center gap-2 rounded-full border border-black/10 bg-white/85 py-1 pl-1 pr-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)] backdrop-blur-md active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9] md:hidden"
+      style={style}
+    >
+      <span className="relative h-9 w-9 overflow-hidden rounded-full">
+        <img src={cover} alt="" className="h-full w-full object-cover" draggable={false} />
+        {!playing ? (
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 text-white">
+            <Play className="h-3.5 w-3.5 fill-white" />
+          </span>
+        ) : null}
+      </span>
+      <span className="flex h-4 items-end gap-[3px]" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="w-[3px] rounded-full bg-[#0069d9]"
+            style={{
+              height: playing ? "100%" : "40%",
+              animation: playing ? `eq-bounce 0.9s ease-in-out ${i * 0.18}s infinite alternate` : "none",
+            }}
+          />
+        ))}
+      </span>
+      <span className="flex flex-col items-start">
+        <span className="max-w-[110px] truncate text-[11px] font-bold leading-tight text-black">{track}</span>
+        <span className="max-w-[110px] truncate text-[9px] leading-tight text-neutral-500">{artist}</span>
+      </span>
+    </button>
   );
 }

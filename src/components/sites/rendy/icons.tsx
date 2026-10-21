@@ -14,33 +14,19 @@ import { cn } from "@/lib/utils";
  * ====================================================================== */
 
 /**
- * Ikon folder macOS — direkonstruksi dari sumber (elenagonci.com/app-icons/folder.png),
- * yaitu ikon sistem macOS generik: folder biru-muda flat, tab kiri-atas + badan
- * persegi-panjang membulat. Natural 256×256; warna body rgb(116,208,250),
- * tab/tepi-cerah rgb(147,220,254), sisi rgb(101,201,248).
+ * Ikon folder — memakai ikon Finder macOS asli dari macosicons.com
+ * (diunduh ke `public/sites/rendy/app-icons/finder.png`).
+ * Dirender sebagai `<img>` berwarna transparan 256×256.
  */
 export function FolderIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 256 256" className={className} aria-hidden="true">
-      {/* bayangan halus */}
-      <path
-        d="M22 62a24 24 0 0 1 24-24h22c20 0 26 1 30 8l14 8c12 4 16 4 28 5h20a24 24 0 0 1 24 24v62a24 24 0 0 1-24 24H46a24 24 0 0 1-24-24V62Z"
-        fill="rgba(31,113,153,0.15)"
-        transform="translate(3 4)"
-      />
-      {/* tab kiri-atas */}
-      <path d="M20 105a24 24 0 0 1 24-24h22c18 0 20 4 24 13 2 5 4 8 7 9l3 2H20Z" fill="#93dcfe" />
-      <path d="M20 105h88v6a24 24 0 0 1-24 24H20v-30Z" fill="#8fd8fd" />
-      {/* badan folder */}
-      <path
-        d="M20 122h216a24 24 0 0 1 24 24v60a24 24 0 0 1-24 24H20a24 24 0 0 1-24-24v-60a24 24 0 0 1 24-24Z"
-        fill="#74d0fa"
-      />
-      {/* highlight atas badan */}
-      <path d="M20 124a24 24 0 0 1 24-24h172c-24 0-34 12-40 24H20Z" fill="#93dcfe" opacity="0.9" />
-      {/* lipatan & sisi */}
-      <path d="M20 186h236v11a24 24 0 0 1-24 24H20a24 24 0 0 1-24-24v-11Z" fill="#65bfef" opacity="0.5" />
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element -- ikon Finder nyata
+    <img
+      src="/sites/rendy/app-icons/finder.png"
+      alt=""
+      draggable={false}
+      className={cn("select-none object-contain", className)}
+    />
   );
 }
 

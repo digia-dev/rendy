@@ -20,14 +20,14 @@ export function AboutTxt({ locale }: { locale: Locale }) {
 
         <div className="grid gap-8 px-8 py-9 md:grid-cols-2 md:px-14 md:py-12">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">
+            <p className="text-[11px] font-medium text-neutral-500 tracking-tight">
               {aboutTxt.then.label[locale]}
             </p>
             <p className="mt-3 text-[15px] leading-6 text-neutral-600">{aboutTxt.then.body[locale]}</p>
           </div>
 
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">
+            <p className="text-[11px] font-medium text-neutral-500 tracking-tight">
               {aboutTxt.now.label[locale]}
             </p>
             <p className="mt-3 text-[15px] leading-6 text-neutral-600">{aboutTxt.now.body[locale]}</p>
@@ -36,7 +36,7 @@ export function AboutTxt({ locale }: { locale: Locale }) {
               type="button"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
-              className="mt-6 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400 transition-colors hover:text-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
+              className="mt-6 flex items-center gap-2 text-[11px] font-medium text-neutral-500 tracking-tight transition-colors hover:text-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
             >
               {aboutTxt.future.label[locale]}
               <span aria-hidden="true" className="text-[14px] leading-none">

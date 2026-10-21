@@ -1,205 +1,190 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { Link } from "@/i18n/navigation";
 import { ui, type Locale } from "@/data/site";
 import { NavGlyph } from "./icons";
+import { BookingDialog } from "./BookingDialog";
+import { createPortal } from "react-dom";
 
 const items: {
   key: string;
   glyph: "home" | "folder" | "sparkle" | "heart" | "calendar" | "phone";
   href: string;
   label: { id: string; en: string };
-  /** kelas background rounded-square icon (putih untuk home, gradien untuk lainnya). */
-  bgCls: string;
+  /** Warna ikon (gradients untuk aksen, netral untuk home & calendar). */
+  iconCls: string;
 }[] = [
   {
     key: "home",
     glyph: "home",
     href: "#top",
     label: { id: "Beranda", en: "Home" },
-    bgCls: "border border-black/10 bg-white text-black hover:bg-[#f3f3f3]",
+    iconCls: "text-neutral-700",
   },
   {
     key: "pillars",
     glyph: "folder",
     href: ui.sectionNav.pillars.href,
     label: ui.sectionNav.pillars.label,
-    bgCls: "text-white bg-gradient-to-b from-[#5FB0FF] to-[#2E7CF6]",
+    iconCls: "text-white bg-gradient-to-b from-[#5FB0FF] to-[#2E7CF6]",
   },
   {
     key: "achievements",
     glyph: "sparkle",
     href: ui.sectionNav.achievements.href,
     label: ui.sectionNav.achievements.label,
-    bgCls: "text-white bg-gradient-to-b from-[#C489FB] to-[#8231E8]",
+    iconCls: "text-white bg-gradient-to-b from-[#C489FB] to-[#8231E8]",
   },
   {
     key: "about",
     glyph: "heart",
     href: ui.sectionNav.about.href,
     label: ui.sectionNav.about.label,
-    bgCls: "text-white bg-gradient-to-b from-[#FF7A93] to-[#F92D50]",
+    iconCls: "text-white bg-gradient-to-b from-[#FF7A93] to-[#F92D50]",
   },
   {
     key: "booking",
     glyph: "calendar",
     href: ui.sectionNav.booking.href,
     label: ui.sectionNav.booking.label,
-    bgCls: "border border-black/10 bg-white text-black",
+    iconCls: "text-neutral-700 bg-white",
   },
   {
     key: "contact",
     glyph: "phone",
     href: ui.sectionNav.contact.href,
     label: ui.sectionNav.contact.label,
-    bgCls: "text-white bg-gradient-to-b from-[#4FDE73] to-[#1FB84A]",
+    iconCls: "text-white bg-gradient-to-b from-[#4FDE73] to-[#1FB84A]",
   },
 ];
 
-const BASE = 40; // ukuran dasar ikon (pin)
-const MAX_SCALE = 1.45; // pembesaran maksimum di tengah
-const RADIUS = 96; // radius pengaruh pointer (px)
-const MAX_LIFT = 12; // pengangkatan maksimum (px) saat membesar
-
-/** Skala & angkat ala macOS Dock berdasarkan jarak ikon → pointer. */
-function magnify(dist: number): number {
-  if (dist >= RADIUS) return 1;
-  const t = 1 - dist / RADIUS; // 0..1 (dekat = 1)
-  // kurva smooth (ease-out kuadratik)
-  const ease = 1 - (1 - t) * (1 - t);
-  return 1 + (MAX_SCALE - 1) * ease;
-}
-
 /**
- * Dock navigasi dengan magnification ala macOS (icon membesar saat pointer
- * mendekat/sliding). mode="top" utk desktop (sticky atas), mode="bottom"
- * utk mobile (sticky bawah, naik saat footer).
+ * Dock navigasi ala macOS (rekreasi Hamza "QuantumOS"):
+ * Bar kaca (simple-glass), setiap icon "dock-icon" membesar & terangkat saat
+ * pointer mendekat (magnification formula `max(1, 1.7 - d/120)`,
+ * `translateY((s-1)*-25px)`), dengan titik indicator di bawah icon.
+ * Mode "top" = sticky atas (desktop), "bottom" = sticky bawah (mobile).
  */
 export function SectionDock({
   locale,
   dayOfMonth,
   weekdayShort,
+  todayISO,
   mode = "top",
 }: {
   locale: Locale;
   dayOfMonth: number;
   weekdayShort: string;
+  todayISO: string;
   mode?: "top" | "bottom";
 }) {
-  const navRef = useRef<HTMLElement>(null);
-  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-  const [mouseX, setMouseX] = useState<number | null>(null);
-  const [centers, setCenters] = useState<number[]>([]);
+  const [openBooking, setOpenBooking] = useState(false);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const iconsRef = useRef<(HTMLElement | null)[]>([]);
+
+  // Magnification ala macOS: hitung jarak pointer → pusat tiap icon,
+  // lalu scale + translateY (persis kode Hamza).
+  useLayoutEffect(() => {
+    const dock = dockRef.current;
+    if (!dock) return;
+
+    const onMove = (e: PointerEvent) => {
+      for (const icon of iconsRef.current) {
+        if (!icon) continue;
+        const r = icon.getBoundingClientRect();
+        const d = Math.abs(e.clientX - (r.left + r.width / 2));
+        const s = Math.max(1, 1.7 - d / 120);
+        icon.style.transform = `scale(${s}) translateY(${(s - 1) * -25}px)`;
+        icon.style.zIndex = String(Math.floor(100 - d));
+      }
+    };
+    const onLeave = () => {
+      for (const icon of iconsRef.current) {
+        if (!icon) continue;
+        icon.style.transform = "scale(1)";
+        icon.style.zIndex = "auto";
+      }
+    };
+
+    dock.addEventListener("pointermove", onMove);
+    dock.addEventListener("pointerleave", onLeave);
+    return () => {
+      dock.removeEventListener("pointermove", onMove);
+      dock.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
 
   const wrapCls =
     mode === "top"
-      ? "pointer-events-none sticky top-4 z-[60] flex justify-center px-4 py-3 md:flex md:-mt-32 md:h-32 md:items-start md:py-0 hidden"
+      ? "pointer-events-none sticky top-12 z-[60] flex justify-center px-4 py-3 hidden md:flex"
       : "pointer-events-none sticky bottom-4 z-[60] flex justify-center px-4 pb-2 md:hidden";
-
-  // Ukur posisi pusat tiap ikon (relatif nav) sekali & saat ukuran berubah.
-  useLayoutEffect(() => {
-    const measure = () => {
-      const nav = navRef.current;
-      if (!nav) return;
-      const navRect = nav.getBoundingClientRect();
-      const cs = items.map((_, i) => {
-        const el = itemRefs.current[i];
-        if (!el) return 0;
-        const r = el.getBoundingClientRect();
-        return r.left - navRect.left + r.width / 2;
-      });
-      setCenters(cs);
-    };
-    measure();
-    const raf = requestAnimationFrame(measure);
-    window.addEventListener("resize", measure);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-
-  // Posisi pointer relatif terhadap nav.
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    const nav = navRef.current;
-    if (!nav) return;
-    const rect = nav.getBoundingClientRect();
-    setMouseX(e.clientX - rect.left);
-  }, []);
-
-  const onPointerLeave = useCallback(() => setMouseX(null), []);
-
-  const scaleFor = (i: number): number => {
-    if (mouseX == null || centers.length === 0) return 1;
-    return magnify(Math.abs(centers[i] - mouseX));
-  };
 
   return (
     <div className={wrapCls}>
-      <nav
-        ref={navRef}
-        aria-label={ui.navAria[locale]}
-        onPointerMove={onPointerMove}
-        onPointerLeave={onPointerLeave}
-        className="glass-card pointer-events-auto flex items-end gap-2 rounded-2xl px-3 pb-1.5 pt-2"
+      {/* Bar kaca dock */}
+      <div
+        ref={dockRef}
+        className="simple-glass pointer-events-auto flex items-end gap-2 rounded-2xl p-2"
       >
         {items.map((item, i) => {
-          const external = item.href.startsWith("http");
-          const label = item.label[locale];
-          const scale = scaleFor(i);
-          const lift = scale - 1 > 0.02 ? MAX_LIFT * (scale - 1) / (MAX_SCALE - 1) : 0;
-
-          // kelas dasar ikon: gradien/putih + visual; transform di-set inline via scale.
-          const iconCls =
-            "flex h-full w-full items-center justify-center overflow-hidden rounded-[24%] shadow-[0_2px_6px_rgba(0,0,0,0.25)] transition-[filter,background-color] duration-150 " +
-            item.bgCls;
+          const isCalendar = item.glyph === "calendar";
+          const scaleCls =
+            "dock-icon relative inline-flex cursor-pointer items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 
           return (
             <span key={item.key} className="relative flex items-end">
-              {i === 1 ? (
-                <span className="w-px self-start bg-black/15 md:mt-0.5 md:h-8" aria-hidden="true" />
-              ) : null}
-              <a
-                ref={(el) => {
-                  itemRefs.current[i] = el;
-                }}
-                href={item.href}
-                title={label}
-                aria-label={label}
-                {...(external ? { target: "_blank" as const, rel: "noopener noreferrer" } : {})}
-                className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
-                style={{
-                  width: BASE, // pin maintain — transform scale akan memperbesarnya
-                  height: BASE,
-                  transform: `translateY(-${lift}px) scale(${scale})`,
-                  transformOrigin: "bottom center",
-                  transition: "transform 0.18s cubic-bezier(0.16,1,0.3,1), width 0.18s, height 0.18s",
-                  willChange: "transform",
-                  zIndex: scale > 1.05 ? 30 : 10,
-                }}
-              >
-                {item.glyph === "calendar" ? (
-                  <span className={iconCls} data-nav-cal>
-                    <span
-                      className="flex h-[38%] w-full shrink-0 items-center justify-center px-0.5 text-[6px] font-bold uppercase text-white"
-                      style={{ backgroundColor: "#ff3b30", paddingTop: "1px" }}
-                    >
+              {isCalendar ? (
+                <button
+                  ref={(el) => {
+                    iconsRef.current[i] = el;
+                  }}
+                  type="button"
+                  onClick={() => setOpenBooking(true)}
+                  aria-label={item.label[locale]}
+                  title={item.label[locale]}
+                  className={`${scaleCls} h-10 w-10 md:h-12 md:w-12`}
+                >
+                  {/* Ikon kalender ala Calendar.app macOS: kotak putih membulat,
+                      hari kecil di atas + tanggal besar hitam di tengah. */}
+                  <span className="relative flex h-full w-full flex-col overflow-hidden rounded-[20%] bg-white/95 shadow-[0_2px_6px_rgba(0,0,0,0.25)] ring-1 ring-black/10 md:rounded-[22%]">
+                    {/* Area hari — background merah, teks putih */}
+                    <span className="flex w-full shrink-0 items-center justify-center bg-[#ff3b30] pb-[2px] pt-[1px] text-[6px] font-bold uppercase leading-none tracking-wide text-white md:pb-[3px] md:text-[7px]">
                       {weekdayShort}
                     </span>
-                    <span className="flex h-[62%] w-full items-center justify-center text-[12px] font-extrabold leading-none text-black" data-nav-day>
+                    {/* Tanggal — font thin besar hampir memenuhi, warna gelap */}
+                    <span className="flex min-h-0 flex-1 items-center justify-center text-[22px] font-extralight leading-none text-neutral-900 md:text-[26px]">
                       {dayOfMonth}
                     </span>
                   </span>
-                ) : (
-                  <span className={iconCls}>
+                  <span className="active-indicator" aria-hidden="true" />
+                </button>
+              ) : (
+                <Link
+                  ref={(el) => {
+                    iconsRef.current[i] = el;
+                  }}
+                  href={item.href}
+                  aria-label={item.label[locale]}
+                  title={item.label[locale]}
+                  className={`${scaleCls} h-10 w-10 rounded-[20%] md:h-12 md:w-12 md:rounded-[24%]`}
+                >
+                  <span
+                    className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[20%] ${item.iconCls} md:rounded-[24%]`}
+                  >
                     <NavGlyph id={item.glyph} />
                   </span>
-                )}
-              </a>
+                  <span className="active-indicator" aria-hidden="true" />
+                </Link>
+              )}
             </span>
           );
         })}
-      </nav>
+      </div>
+      {openBooking ? createPortal(
+        <BookingDialog locale={locale} todayISO={todayISO} onClose={() => setOpenBooking(false)} triggerRef={{ current: null }} />,
+        document.body,
+      ) : null}
     </div>
   );
 }

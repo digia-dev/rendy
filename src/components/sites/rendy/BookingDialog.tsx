@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { daysShort, monthsLong, profile, ui, widgets, type Locale } from "@/data/site";
+import { Wheel } from "./widgets/Wheel";
 
 /**
  * Dialog penjadwalan mandiri bertema macOS (keputusan pengguna — menggantikan
@@ -61,11 +62,17 @@ function googleCalendarUrl(dateISO: string, startHM: string, locale: Locale): st
 export function BookingDialog({ locale, todayISO, onClose, triggerRef }: Props) {
   const today = useMemo(() => new Date(`${todayISO}T12:00:00`), [todayISO]);
   const [selectedDate, setSelectedDate] = useState<string>(todayISO);
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [hour, setHour] = useState("09");
+  const [minute, setMinute] = useState("00");
   const [view, setView] = useState({ y: today.getFullYear(), m: today.getMonth() });
   const panelRef = useRef<HTMLDivElement>(null);
 
   const daysShortL = daysShort[locale];
+
+  // Jam 07–20, menit kelipatan 15 agar pilihan rapi & nyata.
+  const hours = useMemo(() => Array.from({ length: 14 }, (_, i) => String(i + 7).padStart(2, "0")), []);
+  const minutes = useMemo(() => ["00", "15", "30", "45"], []);
+  const selectedSlot = useMemo(() => `${hour}:${minute}`, [hour, minute]);
 
   const grid = useMemo(() => {
     const first = new Date(view.y, view.m, 1).getDay();
@@ -83,7 +90,6 @@ export function BookingDialog({ locale, todayISO, onClose, triggerRef }: Props) 
       const next = new Date(v.y, v.m + delta, 1);
       return { y: next.getFullYear(), m: next.getMonth() };
     });
-    setSelectedSlot(null);
   };
 
   // Tutup dengan Escape + jebakan fokus + kunci gulir latar.
@@ -123,43 +129,49 @@ export function BookingDialog({ locale, todayISO, onClose, triggerRef }: Props) 
   }, [onClose, triggerRef]);
 
   const monthLabel = `${monthsLong[locale][view.m]} ${view.y}`;
-  const canAdd = Boolean(selectedDate && selectedSlot);
+  const canAdd = Boolean(selectedDate);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center md:items-center md:p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/35 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/35 backdrop-blur-[2px] backdrop-enter"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Jendela macOS */}
+      {/* Jendela mobile = bottom-sheet full-width, desktop = modal centered */}
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-title"
         tabIndex={-1}
-        className="relative w-full max-w-[720px] overflow-hidden rounded-xl border border-black/10 bg-white shadow-[0_24px_60px_rgba(0,0,0,0.28)] outline-none"
+        className="relative flex max-h-[92dvh] w-full max-w-full flex-col  overflow-hidden rounded-t-2xl border-t border-black/10 bg-white shadow-[0_-8px_24px_rgba(0,0,0,0.18)] outline-none md:max-h-[90vh] md:max-w-[720px] md:rounded-xl md:border md:shadow-[0_24px_60px_rgba(0,0,0,0.28)]"
       >
+        {/* Grabber — affordance bottom sheet iOS (mobile) */}
+        <div className="flex shrink-0 justify-center pt-2 md:hidden" aria-hidden="true">
+          <span className="h-1 w-10 rounded-full bg-black/15" />
+        </div>
+
         {/* Titlebar dengan lampu lalu lintas macOS */}
-        <div className="flex h-9 items-center gap-2 border-b border-black/10 bg-[#f4f4f5] px-3">
+        <div className="flex h-9 shrink-0 items-center gap-2 border-b border-black/10 bg-[#f4f4f5] px-3">
           <button
             type="button"
             onClick={onClose}
             aria-label={uiClose(locale)}
-            className="group flex h-3 w-3 items-center justify-center"
+            className="-ml-1 flex h-7 w-7 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
           >
             <span className="h-3 w-3 rounded-full bg-[#ff5f57] transition-opacity group-hover:opacity-80" />
           </button>
           <span className="h-3 w-3 rounded-full bg-[#febc2e]" aria-hidden="true" />
           <span className="h-3 w-3 rounded-full bg-[#28c840]" aria-hidden="true" />
           <span className="flex-1 text-center text-[13px] text-neutral-600">{cal.desktopTitle[locale]}</span>
-          <span className="w-12" />
+          <span className="w-7" />
         </div>
 
-        <div className="grid gap-6 p-6 md:grid-cols-[minmax(0,1fr)_240px]">
+        {/* Badan — scrollable di mobile, grid 2 kolom di desktop */}
+        <div className="grid min-h-0 flex-1 gap-5 overflow-y-auto overscroll-contain p-4 pb-2 md:grid-cols-[minmax(0,1fr)_240px] md:gap-6 md:overflow-visible md:p-6 md:pb-6">
           {/* Kalender */}
           <div>
             <h2 id="booking-title" className="text-[15px] font-bold text-black">
@@ -187,9 +199,9 @@ export function BookingDialog({ locale, todayISO, onClose, triggerRef }: Props) 
               </button>
             </div>
 
-            <div className="mt-2 grid grid-cols-7 gap-y-1 text-center" role="grid" aria-label={monthLabel}>
+            <div className="grid w-full grid-cols-7 gap-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden select-none touch-none" role="grid" aria-label={monthLabel}>
               {daysShortL.map((d) => (
-                <span key={d} className="py-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+                <span key={d} className="py-0.5 text-center text-[10px] font-semibold text-neutral-400 tracking-wide">
                   {d.slice(0, 2)}
                 </span>
               ))}
@@ -205,10 +217,9 @@ export function BookingDialog({ locale, todayISO, onClose, triggerRef }: Props) 
                     disabled={past}
                     onClick={() => {
                       setSelectedDate(iso);
-                      setSelectedSlot(null);
                     }}
                     aria-pressed={isSelected}
-                    className="mx-auto flex h-8 w-8 items-center justify-center rounded-full text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9] disabled:cursor-not-allowed disabled:text-neutral-300"
+                    className="flex aspect-square w-full items-center justify-center rounded-full text-[12px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9] disabled:cursor-not-allowed disabled:text-neutral-300 md:text-[13px]"
                     style={
                       isSelected
                         ? { backgroundColor: "#0069d9", color: "#fff", fontWeight: 700 }
@@ -226,35 +237,36 @@ export function BookingDialog({ locale, todayISO, onClose, triggerRef }: Props) 
             </div>
           </div>
 
-          {/* Slot jam */}
+          {/* Slot waktu — wheel picker jam + menit (scroll rolling) */}
           <div className="flex flex-col">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{uiSlotsLabel(locale)}</p>
-            <div className="mt-3 grid max-h-[236px] grid-cols-2 gap-2 overflow-y-auto pr-1 md:grid-cols-1">
-              {cal.slots.map((slot) => {
-                const active = slot === selectedSlot;
-                return (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => setSelectedSlot(slot)}
-                    aria-pressed={active}
-                    className="rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
-                    style={
-                      active
-                        ? { backgroundColor: "#0069d9", borderColor: "#0069d9", color: "#fff" }
-                        : { borderColor: "rgba(0,0,0,0.12)", color: "#262626", background: "#fff" }
-                    }
-                  >
-                    {slot}
-                  </button>
-                );
-              })}
+            <p className="text-[11px] font-medium text-neutral-500 tracking-tight text-center">{uiSlotsLabel(locale)}</p>
+
+            <div className="mx-auto mt-2 flex items-center justify-center gap-1.5 md:mt-3">
+              <div className="rounded-2xl border border-black/10 bg-white px-2 py-1 shadow-sm">
+                <Wheel
+                  items={hours}
+                  value={hour}
+                  onChange={setHour}
+                  ariaLabel={locale === "id" ? "Jam" : "Hour"}
+                />
+              </div>
+              <span className="text-[20px] font-semibold text-neutral-400" aria-hidden="true">:</span>
+              <div className="rounded-2xl border border-black/10 bg-white px-2 py-1 shadow-sm">
+                <Wheel
+                  items={minutes}
+                  value={minute}
+                  onChange={setMinute}
+                  ariaLabel={locale === "id" ? "Menit" : "Minute"}
+                />
+              </div>
             </div>
 
-            <div className="mt-auto pt-4">
+            <p className="mt-3 text-center text-[12px] text-neutral-400">{selectedSlot}</p>
+
+            <div className="sticky bottom-0 z-10 -mx-4 mt-auto shrink-0 border-t border-black/10 bg-white/90 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md md:static md:mx-0 md:mt-4 md:border-t-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
               {canAdd ? (
                 <a
-                  href={googleCalendarUrl(selectedDate, selectedSlot!, locale)}
+                  href={googleCalendarUrl(selectedDate, selectedSlot, locale)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full rounded-full bg-gradient-to-b from-[#57a4f0] to-[#3e8fe4] px-4 py-2.5 text-center text-[13px] font-bold text-white shadow-[0_4px_12px_rgba(62,143,228,0.35)] transition-transform hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"

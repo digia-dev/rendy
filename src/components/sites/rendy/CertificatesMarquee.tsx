@@ -24,12 +24,12 @@ export function CertificatesMarquee({ locale }: { locale: Locale }) {
                 >
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 rounded-full" style={{ backgroundColor: c.color }} />
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-400">
-                      {c.meta[locale].split(" · ")[0]}
+                    <span className="text-[11px] font-semibold text-neutral-500 tracking-tight">
+                      {c.period[locale]}
                     </span>
                   </span>
                   <p className="mt-3 text-[15px] font-bold leading-[19px] text-black">{c.name[locale]}</p>
-                  <p className="mt-2 text-[13px] leading-4 text-neutral-500">{c.meta[locale]}</p>
+                  <p className="mt-2 text-[13px] leading-4 text-neutral-500">{c.company[locale]}</p>
                 </li>
               ))}
             </ul>

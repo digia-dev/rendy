@@ -29,7 +29,7 @@ export function PortfolioList({ locale }: { locale: Locale }) {
                     <FolderIcon className="h-8 w-8" />
                   </span>
                   {e.status === "current" ? (
-                    <span className="rounded-full bg-[#e8f3ff] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0069d9]">
+                    <span className="rounded-full bg-[#e8f3ff] px-2 py-0.5 text-[10px] font-medium text-neutral-500 tracking-tight">
                       {locale === "id" ? "kini" : "now"}
                     </span>
                   ) : null}

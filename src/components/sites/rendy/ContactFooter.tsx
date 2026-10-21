@@ -23,7 +23,7 @@ export function ContactFooter({ locale }: { locale: Locale }) {
   const other = locale === "id" ? "en" : "id";
 
   return (
-    <footer id="contact" className="relative z-10 border-t border-black/10 bg-white px-6 py-16">
+    <footer id="contact" className="relative z-10 border-t border-black/10 bg-white px-6 py-8 md:py-10">
       <div className="mx-auto grid max-w-[1060px] gap-10 md:grid-cols-[1.2fr_1fr_0.9fr] md:gap-6">
         {/* identitas */}
         <div>
@@ -68,7 +68,7 @@ export function ContactFooter({ locale }: { locale: Locale }) {
               locale={other}
               className="rounded-full border border-black/10 px-3 py-1.5 text-[12px] font-semibold text-neutral-600 hover:border-black/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
             >
-              {other.toUpperCase()} · {ui.footerLang[locale]}
+              {other.toUpperCase()}, {ui.footerLang[locale]}
             </Link>
           </div>
         </div>
@@ -97,7 +97,7 @@ export function ContactFooter({ locale }: { locale: Locale }) {
         </nav>
 
         {/* lencana */}
-        <div className="flex flex-col items-start gap-3 md:items-end">
+        <div className="flex flex-col items-start gap-2 md:items-end">
           <div className="flex gap-2">
             {badges.map((b) => (
               <RoundBadge key={b.label} color={b.color} label={b.label} />
