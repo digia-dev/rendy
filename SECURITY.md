@@ -3,7 +3,7 @@
 ## Supported versions
 
 This project is a template rather than a versioned library. Security fixes are
-applied to the latest version of the `main` branch.
+applied to the latest version of the `master` branch.
 
 Projects created from this template do not receive fixes automatically. Their
 maintainers are responsible for reviewing relevant changes and updating their
@@ -34,7 +34,7 @@ a private contact method. Do not post vulnerability details there.
 
 Security reports may cover:
 
-- Code and dependencies shipped on the `main` branch
+- Code and dependencies shipped on the `master` branch
 - Helper and synchronization scripts under `scripts/`
 - Repository configuration or defaults that could make generated projects
   insecure
