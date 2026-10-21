@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
-import { type Locale } from "@/data/site";
+import { ui, type Locale } from "@/data/site";
 
 interface Props {
   locale: Locale;
   /** Judul di titlebar jendela. */
   title: string;
-  /** Slot toolbar kanan (opsional, mis. tombol RSS/locale). */
+  /** Slot toolbar kanan (opsional; default = link RSS feed). */
   toolbar?: ReactNode;
   /** Pane kiri (daftar catatan). */
   sidebar: ReactNode;
@@ -46,7 +46,15 @@ export function NotesWindow({
           {title}
         </span>
         <span className="flex min-w-[76px] items-center justify-end gap-2">
-          {toolbar}
+          {/* Pengganti entri "Berlangganan RSS" di dropdown MenuBar lama */}
+          {toolbar ?? (
+            <a
+              href={`/${locale}/rss.xml`}
+              className="rounded px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-400 transition-colors hover:bg-black/[0.05] hover:text-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]"
+            >
+              {ui.blog.rss[locale]}
+            </a>
+          )}
         </span>
       </div>
 

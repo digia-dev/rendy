@@ -7,8 +7,6 @@ interface Props {
   locale: Locale;
   role: L10n;
   ariaRoleLabel: string;
-  /** 3 post terbaru untuk dropdown Blog (di-pass dari server). */
-  blogPosts?: { slug: string; title: string }[];
 }
 
 interface DropItem {
@@ -17,12 +15,22 @@ interface DropItem {
   sep?: boolean;
 }
 
+/** Entri menu: dropdown ala macOS, atau link langsung (Blog). */
+type NavEntry =
+  | { key: string; label: string; href: string }
+  | { key: string; label: string; items: DropItem[] };
+
+/** Gaya item menu — dipakai tombol dropdown & link Blog agar seragam. */
+const itemCls =
+  "rounded px-2.5 py-0.5 font-medium text-neutral-700 transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9]";
+
 /**
  * Menu bar ala macOS (rekreasi Hamza "QuantumOS"):
- * Bar tipis `h-8` frosted glass (blur) di atas; kiri = logo + menu item dengan
- * dropdown bergaya macOS, kanan = jam. Konten tetap mengikuti data profil.
+ * Bar tipis `h-8` frosted glass (blur) di atas; kiri = logo + menu item —
+ * Blog langsung ke halaman blog, lainnya dropdown ala macOS — kanan = jam.
+ * Konten tetap mengikuti data profil.
  */
-export function MenuBar({ locale, role, ariaRoleLabel, blogPosts = [] }: Props) {
+export function MenuBar({ locale, role, ariaRoleLabel }: Props) {
   const [now, setNow] = useState<Date | null>(null);
   const barRef = useRef<HTMLElement>(null);
 
@@ -50,8 +58,9 @@ export function MenuBar({ locale, role, ariaRoleLabel, blogPosts = [] }: Props) 
         .replace(/\s+/g, " ")
     : "";
 
-  // Menunya: navigasi section + kontak, bergaya macOS dropdown.
-  const menus: { key: string; label: string; items: DropItem[] }[] = [
+  // Menunya: navigasi section + kontak (dropdown ala macOS); Blog = link
+  // langsung ke halaman blog tanpa dropdown.
+  const menus: NavEntry[] = [
     {
       key: "tentang",
       label: locale === "id" ? "Tentang" : "About",
@@ -72,15 +81,7 @@ export function MenuBar({ locale, role, ariaRoleLabel, blogPosts = [] }: Props) 
     {
       key: "blog",
       label: "Blog",
-      items: [
-        ...blogPosts.map((p, i) => ({
-          href: `/${locale}/blog/${p.slug}`,
-          label: p.title,
-          ...(i === blogPosts.length - 1 && blogPosts.length > 0 ? { sep: true } : {}),
-        })),
-        { href: `/${locale}/blog`, label: locale === "id" ? "Semua artikel" : "All posts" },
-        { href: `/${locale}/rss.xml`, label: `${locale === "id" ? "Berlangganan RSS" : "Subscribe via RSS"}`, sep: blogPosts.length === 0 },
-      ],
+      href: `/${locale}/blog`,
     },
     {
       key: "kontak",
@@ -119,9 +120,15 @@ export function MenuBar({ locale, role, ariaRoleLabel, blogPosts = [] }: Props) 
           {/* Menu item + dropdown ala macOS — hanya desktop; di mobile
               navigasi lewat dock bawah (ikon Beranda/Blog/Kalender/dll.) */}
           <span className="hidden items-center gap-1 md:flex">
-            {menus.map((m) => (
-              <MenuDropMenu key={m.key} label={m.label} items={m.items} />
-            ))}
+            {menus.map((m) =>
+              "href" in m ? (
+                <a key={m.key} href={m.href} className={itemCls}>
+                  {m.label}
+                </a>
+              ) : (
+                <MenuDropMenu key={m.key} label={m.label} items={m.items} />
+              ),
+            )}
           </span>
         </nav>
 
@@ -175,9 +182,7 @@ function MenuDropMenu({ label, items }: { label: string; items: DropItem[] }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`rounded px-2.5 py-0.5 font-medium text-neutral-700 transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0069d9] ${
-          open ? "bg-black/10" : ""
-        }`}
+        className={`${itemCls} ${open ? "bg-black/10" : ""}`}
       >
         {label}
       </button>

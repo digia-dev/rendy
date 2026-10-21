@@ -131,7 +131,7 @@ export function SectionDock({
       : "pointer-events-none sticky bottom-4 z-[60] flex justify-center px-4 pb-2 md:hidden";
 
   // Mode top (dock desktop) menyembunyikan item khusus mobile (mis. Blog —
-  // desktop sudah punya dropdown Blog di MenuBar).
+  // desktop sudah punya menu Blog di MenuBar, link langsung ke halamannya).
   const visibleItems = mode === "top" ? items.filter((it) => !it.mobileOnly) : items;
 
   return (
